@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, g, jsonify, Response
-import sqlite3, csv, io, json
+import sqlite3, csv, io, json, os, shutil, threading, time
 from datetime import datetime, date, timedelta
-from db import get_db, init_db
+from db import get_db, init_db, DB_PATH
 
 app = Flask(__name__)
 app.secret_key = 'moil-primary-it-tracker-2026'
@@ -25,6 +25,13 @@ ACCESSORY_TYPES = ['HDMI Cable','USB-C Cable','USB-A Cable','DisplayPort Cable',
                    'Power Cable','Charging Adapter','USB-C Charger','Lightning Cable',
                    'Docking Station','USB Hub','Keyboard','Mouse','Webcam',
                    'Headset','Laptop Bag','Tablet Case','Monitor Stand','Other']
+
+INVOICE_CATEGORIES = ['ICT Equipment','Software / Licences','Repairs & Maintenance',
+                      'Accessories & Peripherals','Networking','Furniture','Other']
+PAYMENT_STATUSES = ['paid','pending','overdue','cancelled']
+FURNITURE_CATEGORIES = ['Desk','Chair','Table','Cabinet','Shelving','Whiteboard',
+                        'Bookcase','Storage','Display','Other']
+FURNITURE_STATUSES = ['active','in storage','disposed','on loan']
 
 WARRANTY_WARN_DAYS = 90
 LICENCE_WARN_DAYS = 60
@@ -77,8 +84,18 @@ def fmt_date(date_str):
         return date_str
 
 
+def fmt_currency(val):
+    if val is None:
+        return '—'
+    try:
+        return f'${float(val):,.2f}'
+    except:
+        return str(val)
+
+
 app.jinja_env.globals.update(
     fmt_date=fmt_date,
+    fmt_currency=fmt_currency,
     days_until=days_until,
     is_expired=is_expired,
     is_expiring_soon=is_expiring_soon,
@@ -96,6 +113,10 @@ app.jinja_env.globals.update(
     LICENCE_TYPES=LICENCE_TYPES,
     VENDORS_LIST=VENDORS_LIST,
     ACCESSORY_TYPES=ACCESSORY_TYPES,
+    INVOICE_CATEGORIES=INVOICE_CATEGORIES,
+    PAYMENT_STATUSES=PAYMENT_STATUSES,
+    FURNITURE_CATEGORIES=FURNITURE_CATEGORIES,
+    FURNITURE_STATUSES=FURNITURE_STATUSES,
 )
 
 
@@ -478,8 +499,11 @@ def export():
     dev_count = db.execute("SELECT COUNT(*) as c FROM devices").fetchone()['c']
     lic_count = db.execute("SELECT COUNT(*) as c FROM licences").fetchone()['c']
     mnt_count = db.execute("SELECT COUNT(*) as c FROM maintenance").fetchone()['c']
+    row = db.execute("SELECT value FROM settings WHERE key='last_backup'").fetchone()
+    last_backup = row['value'] if row else None
     return render_template('export.html', dev_count=dev_count,
-                           lic_count=lic_count, mnt_count=mnt_count)
+                           lic_count=lic_count, mnt_count=mnt_count,
+                           last_backup=last_backup)
 
 
 @app.route('/export/devices.csv')
@@ -530,6 +554,244 @@ def export_maintenance():
                     headers={'Content-Disposition': 'attachment; filename=maintenance.csv'})
 
 
+@app.route('/export/backup/download')
+def export_backup_download():
+    with open(DB_PATH, 'rb') as f:
+        data = f.read()
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return Response(data, mimetype='application/octet-stream',
+                    headers={'Content-Disposition': f'attachment; filename=tracker_backup_{ts}.db'})
+
+
+@app.route('/export/backup/manual', methods=['POST'])
+def export_backup_manual():
+    _do_backup()
+    flash('Backup saved to backups/ folder.', 'success')
+    return redirect(url_for('export'))
+
+
+# ─── Budget / Invoices ────────────────────────────────────────────────────────
+
+@app.route('/budget')
+def budget():
+    db = g.db
+    year = request.args.get('year', date.today().year, type=int)
+    invoices = db.execute(
+        "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date DESC",
+        (str(year),)
+    ).fetchall()
+
+    years = db.execute(
+        "SELECT DISTINCT strftime('%Y', date) as yr FROM invoices ORDER BY yr DESC"
+    ).fetchall()
+    year_list = [r['yr'] for r in years]
+    if str(year) not in year_list:
+        year_list.insert(0, str(year))
+
+    total = sum(r['amount'] for r in invoices)
+    by_cat = {}
+    for r in invoices:
+        by_cat[r['category']] = by_cat.get(r['category'], 0) + r['amount']
+
+    return render_template('budget.html', invoices=invoices, year=year,
+                           year_list=year_list, total=total, by_cat=by_cat)
+
+
+@app.route('/budget/new', methods=['GET', 'POST'])
+def invoice_new():
+    if request.method == 'POST':
+        _save_invoice(None)
+        flash('Invoice added.', 'success')
+        return redirect(url_for('budget'))
+    return render_template('invoice_form.html', invoice=None, title='Add Invoice')
+
+
+@app.route('/budget/<int:id>/edit', methods=['GET', 'POST'])
+def invoice_edit(id):
+    inv = g.db.execute("SELECT * FROM invoices WHERE id=?", (id,)).fetchone()
+    if not inv:
+        return redirect(url_for('budget'))
+    if request.method == 'POST':
+        _save_invoice(id)
+        flash('Invoice updated.', 'success')
+        return redirect(url_for('budget'))
+    return render_template('invoice_form.html', invoice=inv, title='Edit Invoice')
+
+
+@app.route('/budget/<int:id>/delete', methods=['POST'])
+def invoice_delete(id):
+    g.db.execute("DELETE FROM invoices WHERE id=?", (id,))
+    g.db.commit()
+    flash('Invoice deleted.', 'info')
+    return redirect(url_for('budget'))
+
+
+def _save_invoice(id):
+    f = request.form
+    db = g.db
+    amount = f.get('amount') or 0
+    gst_raw = f.get('gst') or None
+    vals = (
+        f.get('date') or date.today().isoformat(),
+        f.get('vendor', '').strip(),
+        f.get('description', '').strip(),
+        f.get('category', 'ICT Equipment'),
+        float(amount),
+        float(gst_raw) if gst_raw else None,
+        f.get('po_number', '').strip(),
+        f.get('invoice_number', '').strip(),
+        f.get('payment_status', 'paid'),
+        f.get('notes', '').strip(),
+    )
+    if id is None:
+        db.execute("""INSERT INTO invoices
+            (date,vendor,description,category,amount,gst,po_number,invoice_number,payment_status,notes)
+            VALUES (?,?,?,?,?,?,?,?,?,?)""", vals)
+    else:
+        db.execute("""UPDATE invoices SET
+            date=?,vendor=?,description=?,category=?,amount=?,gst=?,
+            po_number=?,invoice_number=?,payment_status=?,notes=? WHERE id=?""", vals + (id,))
+    db.commit()
+
+
+# ─── Furniture ────────────────────────────────────────────────────────────────
+
+@app.route('/furniture')
+def furniture():
+    db = g.db
+    search = request.args.get('q', '').strip()
+    cat = request.args.get('cat', '')
+    status = request.args.get('status', '')
+    location = request.args.get('location', '')
+
+    query = "SELECT * FROM furniture WHERE 1=1"
+    params = []
+    if search:
+        query += " AND (name LIKE ? OR supplier LIKE ? OR location LIKE ?)"
+        p = f'%{search}%'
+        params.extend([p, p, p])
+    if cat:
+        query += " AND category=?"
+        params.append(cat)
+    if status:
+        query += " AND status=?"
+        params.append(status)
+    if location:
+        query += " AND location LIKE ?"
+        params.append(f'%{location}%')
+    query += " ORDER BY category, name"
+    rows = db.execute(query, params).fetchall()
+
+    total_value = sum((r['purchase_price'] or 0) * (r['quantity'] or 1) for r in rows)
+    total_items = sum(r['quantity'] or 1 for r in rows)
+    return render_template('furniture.html', items=rows,
+                           total_value=total_value, total_items=total_items,
+                           search=search, cat=cat, status=status, location=location)
+
+
+@app.route('/furniture/new', methods=['GET', 'POST'])
+def furniture_new():
+    if request.method == 'POST':
+        _save_furniture(None)
+        flash('Furniture item added.', 'success')
+        return redirect(url_for('furniture'))
+    return render_template('furniture_form.html', item=None, title='Add Furniture')
+
+
+@app.route('/furniture/<int:id>/edit', methods=['GET', 'POST'])
+def furniture_edit(id):
+    item = g.db.execute("SELECT * FROM furniture WHERE id=?", (id,)).fetchone()
+    if not item:
+        return redirect(url_for('furniture'))
+    if request.method == 'POST':
+        _save_furniture(id)
+        flash('Furniture item updated.', 'success')
+        return redirect(url_for('furniture'))
+    return render_template('furniture_form.html', item=item, title='Edit Furniture')
+
+
+@app.route('/furniture/<int:id>/delete', methods=['POST'])
+def furniture_delete(id):
+    g.db.execute("DELETE FROM furniture WHERE id=?", (id,))
+    g.db.commit()
+    flash('Item deleted.', 'info')
+    return redirect(url_for('furniture'))
+
+
+def _save_furniture(id):
+    f = request.form
+    db = g.db
+    now = datetime.now().isoformat()
+    vals = (
+        f.get('name', '').strip(),
+        f.get('category', 'Other'),
+        f.get('quantity') or 1,
+        f.get('location', '').strip(),
+        f.get('condition', 'Good'),
+        f.get('purchase_date') or None,
+        f.get('purchase_price') or None,
+        f.get('supplier', '').strip(),
+        f.get('status', 'active'),
+        f.get('notes', '').strip(),
+        now,
+    )
+    if id is None:
+        db.execute("""INSERT INTO furniture
+            (name,category,quantity,location,condition,purchase_date,purchase_price,
+             supplier,status,notes,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)""", vals)
+    else:
+        db.execute("""UPDATE furniture SET
+            name=?,category=?,quantity=?,location=?,condition=?,purchase_date=?,
+            purchase_price=?,supplier=?,status=?,notes=?,updated_at=? WHERE id=?""",
+            vals + (id,))
+    db.commit()
+
+
+# ─── Auto Backup ──────────────────────────────────────────────────────────────
+
+BACKUP_DIR = os.path.join(os.path.dirname(__file__), 'backups')
+BACKUP_INTERVAL_DAYS = 7
+MAX_BACKUPS = 4
+
+
+def _do_backup():
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    dst = os.path.join(BACKUP_DIR, f'tracker_{ts}.db')
+    shutil.copy2(DB_PATH, dst)
+
+    files = sorted(
+        [f for f in os.listdir(BACKUP_DIR) if f.startswith('tracker_') and f.endswith('.db')]
+    )
+    while len(files) > MAX_BACKUPS:
+        os.remove(os.path.join(BACKUP_DIR, files.pop(0)))
+
+    conn = get_db()
+    conn.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('last_backup', ?)",
+                 (datetime.now().isoformat(),))
+    conn.commit()
+    conn.close()
+    print(f'[backup] Saved {dst}')
+
+
+def _backup_worker():
+    time.sleep(10)
+    while True:
+        try:
+            conn = get_db()
+            row = conn.execute("SELECT value FROM settings WHERE key='last_backup'").fetchone()
+            conn.close()
+            last = datetime.fromisoformat(row['value']) if row else None
+            if last is None or (datetime.now() - last).days >= BACKUP_INTERVAL_DAYS:
+                _do_backup()
+        except Exception as e:
+            print(f'[backup] Error: {e}')
+        time.sleep(3600)
+
+
 if __name__ == '__main__':
     init_db()
+    t = threading.Thread(target=_backup_worker, daemon=True)
+    t.start()
     app.run(debug=True, port=5000, host='0.0.0.0')

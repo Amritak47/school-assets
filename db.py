@@ -116,6 +116,37 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    vendor TEXT,
+    description TEXT NOT NULL,
+    category TEXT DEFAULT 'ICT Equipment',
+    amount REAL NOT NULL,
+    gst REAL,
+    po_number TEXT,
+    invoice_number TEXT,
+    payment_status TEXT DEFAULT 'paid',
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS furniture (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    category TEXT DEFAULT 'Other',
+    quantity INTEGER DEFAULT 1,
+    location TEXT,
+    condition TEXT DEFAULT 'Good',
+    purchase_date TEXT,
+    purchase_price REAL,
+    supplier TEXT,
+    status TEXT DEFAULT 'active',
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 

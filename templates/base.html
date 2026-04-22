@@ -40,6 +40,10 @@
         Devices
         <span class="nav-badge" id="badge-devices"></span>
       </a>
+      <a href="{{ url_for('furniture') }}" class="nav-link {% if 'furniture' in request.endpoint %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 7a2 2 0 0 1-2-2V5h20v0a2 2 0 0 1-2 2M4 7l1 10h14l1-10M9 11h6"/></svg>
+        Furniture
+      </a>
 
       <div class="nav-section">Software</div>
       <a href="{{ url_for('licences') }}" class="nav-link {% if 'licence' in request.endpoint %}active{% endif %}">
@@ -55,6 +59,12 @@
       <a href="{{ url_for('checkout') }}" class="nav-link {% if 'checkout' in request.endpoint %}active{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         Check In/Out
+      </a>
+
+      <div class="nav-section">Finance</div>
+      <a href="{{ url_for('budget') }}" class="nav-link {% if 'budget' in request.endpoint or 'invoice' in request.endpoint %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Budget & Invoices
       </a>
 
       <div class="nav-section">Contacts</div>

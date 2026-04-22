@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Budget & Invoices{% endblock %}
+{% block page_title %}Budget & Invoices{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Invoice
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Year tabs -->
+<div class="year-tabs">
+  {% for yr in year_list %}
+  <a href="{{ url_for('budget', year=yr) }}"
+     class="year-tab {% if yr|int == year %}active{% endif %}">{{ yr }}</a>
+  {% endfor %}
+</div>
+
+<!-- Summary cards -->
+<div class="budget-summary">
+  <div class="stat-card">
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ fmt_currency(total) }}</div>
+      <div class="stat-label">Total Spent {{ year }}</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon teal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ invoices|length }}</div>
+      <div class="stat-label">Invoices</div>
+    </div>
+  </div>
+  {% for cat, amt in by_cat.items() %}
+  <div class="stat-card">
+    <div class="stat-icon gray">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    </div>
+    <div>
+      <div class="stat-value" style="font-size:18px">{{ fmt_currency(amt) }}</div>
+      <div class="stat-label">{{ cat }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Spend by category bar chart -->
+{% if by_cat %}
+<div class="card" style="margin-bottom:20px">
+  <div class="card-head">Spend by Category — {{ year }}</div>
+  <div style="padding:14px 18px">
+    {% for cat, amt in by_cat.items()|sort(attribute='1', reverse=true) %}
+    {% set pct = (amt / total * 100) if total else 0 %}
+    <div class="budget-cat-bar">
+      <span class="budget-cat-name">{{ cat }}</span>
+      <div class="budget-cat-wrap"><div class="budget-cat-fill" style="width:{{ pct|round(1) }}%"></div></div>
+      <span class="budget-cat-amt">{{ fmt_currency(amt) }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Invoice list -->
+<div class="card">
+  <div class="card-head">
+    All Invoices — {{ year }}
+    <span class="badge badge-blue">{{ invoices|length }}</span>
+  </div>
+  {% if not invoices %}
+  <div class="empty-state-inline">No invoices for {{ year }}. <a href="{{ url_for('invoice_new') }}" style="color:var(--blue)">Add one</a>.</div>
+  {% else %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Vendor</th>
+        <th>Category</th>
+        <th>Invoice #</th>
+        <th>Status</th>
+        <th style="text-align:right">Amount (inc GST)</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in invoices %}
+      <tr>
+        <td class="mono">{{ fmt_date(inv['date']) }}</td>
+        <td><strong>{{ inv['description'] }}</strong>
+          {% if inv['po_number'] %}<br><small class="text-muted">PO: {{ inv['po_number'] }}</small>{% endif %}
+        </td>
+        <td>{{ inv['vendor'] or '—' }}</td>
+        <td><span class="badge badge-gray">{{ inv['category'] }}</span></td>
+        <td class="mono text-muted">{{ inv['invoice_number'] or '—' }}</td>
+        <td>
+          {% if inv['payment_status'] == 'paid' %}
+            <span class="badge badge-green">Paid</span>
+          {% elif inv['payment_status'] == 'pending' %}
+            <span class="badge badge-orange">Pending</span>
+          {% elif inv['payment_status'] == 'overdue' %}
+            <span class="badge badge-red">Overdue</span>
+          {% else %}
+            <span class="badge badge-gray">{{ inv['payment_status']|title }}</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right;font-weight:700">{{ fmt_currency(inv['amount']) }}</td>
+        <td class="action-cell">
+          <a href="{{ url_for('invoice_edit', id=inv['id']) }}" class="btn-icon" title="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </a>
+          <form method="post" action="{{ url_for('invoice_delete', id=inv['id']) }}" style="display:inline" onsubmit="return confirm('Delete this invoice?')">
+            <button class="btn-icon btn-icon-danger" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% if inv['notes'] %}
+      <tr class="notes-row"><td colspan="8" class="note-cell">{{ inv['notes'] }}</td></tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr style="background:#F9FAFB;font-weight:700">
+        <td colspan="6" style="padding:10px 16px;font-size:13px">Total</td>
+        <td style="padding:10px 16px;text-align:right;font-size:15px;color:var(--blue)">{{ fmt_currency(total) }}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

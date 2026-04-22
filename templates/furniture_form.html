@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('furniture') }}" class="btn btn-outline">← Back</a>{% endblock %}
+
+{% block content %}
+<form method="post" class="form-card">
+  <div class="form-section-title">Item Details</div>
+  <div class="form-grid">
+    <div class="form-group full-width">
+      <label>Name / Description *</label>
+      <input type="text" name="name" value="{{ item['name'] if item else '' }}"
+             placeholder="e.g. Student Desk, Teacher Chair" required>
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select name="category">
+        {% for c in FURNITURE_CATEGORIES %}
+        <option value="{{ c }}" {% if item and item['category'] == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Quantity</label>
+      <input type="number" name="quantity" min="1" value="{{ item['quantity'] if item else 1 }}">
+    </div>
+    <div class="form-group">
+      <label>Location</label>
+      <input type="text" name="location" value="{{ item['location'] if item else '' }}"
+             placeholder="e.g. Classroom 3, Library">
+    </div>
+    <div class="form-group">
+      <label>Condition</label>
+      <select name="condition">
+        {% for c in CONDITIONS %}
+        <option value="{{ c }}" {% if item and item['condition'] == c %}selected{% elif not item and c == 'Good' %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select name="status">
+        {% for s in FURNITURE_STATUSES %}
+        <option value="{{ s }}" {% if item and item['status'] == s %}selected{% elif not item and s == 'active' %}selected{% endif %}>{{ s|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Purchase Date</label>
+      <input type="date" name="purchase_date" value="{{ item['purchase_date'] if item else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Unit Purchase Price (AUD)</label>
+      <input type="number" name="purchase_price" step="0.01" min="0"
+             value="{{ item['purchase_price'] if item else '' }}" placeholder="0.00">
+    </div>
+    <div class="form-group full-width">
+      <label>Supplier</label>
+      <input type="text" name="supplier" value="{{ item['supplier'] if item else '' }}"
+             placeholder="Where was it purchased">
+    </div>
+    <div class="form-group full-width">
+      <label>Notes</label>
+      <textarea name="notes" rows="3">{{ item['notes'] if item else '' }}</textarea>
+    </div>
+  </div>
+  <div class="form-actions">
+    <a href="{{ url_for('furniture') }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ 'Update Item' if item else 'Add Item' }}</button>
+  </div>
+</form>
+{% endblock %}

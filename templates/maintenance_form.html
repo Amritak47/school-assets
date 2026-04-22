@@ -8,14 +8,24 @@
   <div class="form-grid">
     <div class="form-group">
       <label>Device *</label>
-      <select name="device_id" required>
-        <option value="">— Select Device —</option>
-        {% for d in devices %}
-          <option value="{{ d['id'] }}" {% if pre_device and pre_device|int == d['id'] %}selected{% endif %}>
-            {{ d['asset_tag'] or d['serial_number'] or '' }} — {{ d['device_type'] }}
-          </option>
-        {% endfor %}
-      </select>
+      <div class="device-picker">
+        <input type="text" class="device-picker-input"
+               placeholder="Type to search by tag, serial, type…"
+               autocomplete="off"
+               {% if pre_device %}value="pre-selected"{% endif %}>
+        <input type="hidden" name="device_id" {% if pre_device %}value="{{ pre_device }}"{% endif %} required>
+        <ul class="picker-dropdown">
+          {% for d in devices %}
+          <li class="picker-option"
+              data-value="{{ d['id'] }}"
+              data-label="{{ (d['asset_tag'] or d['serial_number'] or '') ~ ' ' ~ d['device_type'] }}"
+              {% if pre_device and pre_device|int == d['id'] %}data-preselect="true"{% endif %}>
+            <span class="picker-option-label">{{ d['asset_tag'] or d['serial_number'] or ('Device #' ~ d['id']) }}</span>
+            <span class="picker-option-sub">{{ d['device_type'] }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
     <div class="form-group">
       <label>Date</label>

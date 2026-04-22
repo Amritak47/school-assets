@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('budget') }}" class="btn btn-outline">← Back</a>{% endblock %}
+
+{% block content %}
+<form method="post" class="form-card">
+  <div class="form-section-title">Invoice Details</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Date *</label>
+      <input type="date" name="date" value="{{ invoice['date'] if invoice else today() }}" required>
+    </div>
+    <div class="form-group">
+      <label>Vendor / Supplier</label>
+      <input type="text" name="vendor" value="{{ invoice['vendor'] if invoice else '' }}" placeholder="e.g. Dell Australia">
+    </div>
+    <div class="form-group full-width">
+      <label>Description *</label>
+      <input type="text" name="description" value="{{ invoice['description'] if invoice else '' }}" placeholder="What was purchased" required>
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select name="category">
+        {% for c in INVOICE_CATEGORIES %}
+        <option value="{{ c }}" {% if invoice and invoice['category'] == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Payment Status</label>
+      <select name="payment_status">
+        {% for s in PAYMENT_STATUSES %}
+        <option value="{{ s }}" {% if invoice and invoice['payment_status'] == s %}selected{% elif not invoice and s == 'paid' %}selected{% endif %}>{{ s|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Amount (AUD inc GST) *</label>
+      <input type="number" name="amount" step="0.01" min="0"
+             value="{{ invoice['amount'] if invoice else '' }}" placeholder="0.00" required>
+    </div>
+    <div class="form-group">
+      <label>GST Component (AUD)</label>
+      <input type="number" name="gst" step="0.01" min="0"
+             value="{{ invoice['gst'] if invoice else '' }}" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Invoice Number</label>
+      <input type="text" name="invoice_number" value="{{ invoice['invoice_number'] if invoice else '' }}" placeholder="Supplier invoice ref">
+    </div>
+    <div class="form-group">
+      <label>PO Number</label>
+      <input type="text" name="po_number" value="{{ invoice['po_number'] if invoice else '' }}" placeholder="Purchase order number">
+    </div>
+    <div class="form-group full-width">
+      <label>Notes</label>
+      <textarea name="notes" rows="3">{{ invoice['notes'] if invoice else '' }}</textarea>
+    </div>
+  </div>
+  <div class="form-actions">
+    <a href="{{ url_for('budget') }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ 'Update Invoice' if invoice else 'Add Invoice' }}</button>
+  </div>
+</form>
+{% endblock %}
