@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance{% endblock %}
+{% block page_title %}Maintenance Records{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('maintenance_new') }}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Record
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <table class="table">
+    <thead><tr>
+      <th>Date</th><th>Device</th><th>Type</th><th>Technician</th><th>Cost</th><th>Notes</th><th></th>
+    </tr></thead>
+    <tbody>
+      {% if not records %}
+      <tr><td colspan="7" class="empty-cell">No maintenance records yet</td></tr>
+      {% endif %}
+      {% for m in records %}
+      <tr>
+        <td>{{ fmt_date(m['date']) }}</td>
+        <td>
+          {% if m['asset_tag'] or m['serial_number'] %}
+            <a href="{{ url_for('device_detail', id=m['device_id']) }}" class="device-link">
+              <strong>{{ m['asset_tag'] or m['serial_number'] }}</strong>
+            </a>
+            <br><small class="text-muted">{{ m['device_type'] or '' }}</small>
+          {% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        <td><span class="type-chip">{{ m['type'] or '—' }}</span></td>
+        <td>{{ m['technician'] or '—' }}</td>
+        <td>{{ '$' + '{:,.0f}'.format(m['cost']) if m['cost'] else '—' }}</td>
+        <td class="text-muted">{{ m['notes'] or '—' }}</td>
+        <td>
+          <form method="post" action="{{ url_for('maintenance_delete', id=m['id']) }}" onsubmit="return confirm('Delete this record?')">
+            <button class="btn-icon btn-icon-danger" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

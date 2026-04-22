@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Add Maintenance Record{% endblock %}
+{% block page_title %}Add Maintenance Record{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('maintenance') }}" class="btn btn-outline">← Back</a>{% endblock %}
+
+{% block content %}
+<form method="post" action="{{ url_for('maintenance_new') }}" class="form-card">
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Device *</label>
+      <select name="device_id" required>
+        <option value="">— Select Device —</option>
+        {% for d in devices %}
+          <option value="{{ d['id'] }}" {% if pre_device and pre_device|int == d['id'] %}selected{% endif %}>
+            {{ d['asset_tag'] or d['serial_number'] or '' }} — {{ d['device_type'] }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" name="date" value="{{ today() }}">
+    </div>
+    <div class="form-group">
+      <label>Maintenance Type</label>
+      <select name="type">
+        <option value="">— Select —</option>
+        {% for t in MAINTENANCE_TYPES %}
+          <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Technician</label>
+      <input type="text" name="technician" placeholder="Name">
+    </div>
+    <div class="form-group">
+      <label>Cost (AUD)</label>
+      <input type="number" name="cost" step="0.01" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Device Status After</label>
+      <select name="status_after">
+        <option value="">— No Change —</option>
+        {% for s in STATUSES %}
+          <option value="{{ s }}">{{ s|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group full-width">
+      <label>Notes</label>
+      <textarea name="notes" rows="3" placeholder="Describe what was done…"></textarea>
+    </div>
+  </div>
+  <div class="form-actions">
+    <a href="{{ url_for('maintenance') }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">Add Record</button>
+  </div>
+</form>
+{% endblock %}

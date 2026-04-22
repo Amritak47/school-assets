@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('devices') }}" class="btn btn-outline">← Back to Devices</a>
+{% endblock %}
+
+{% block content %}
+<form method="post" class="form-card">
+
+  <div class="form-section-title">Identification</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Device Type *</label>
+      <select name="device_type" required>
+        <option value="">— Select —</option>
+        {% for t in DEVICE_TYPES %}
+          <option value="{{ t }}" {% if device and device['device_type']==t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Asset Tag</label>
+      <input type="text" name="asset_tag" value="{{ device['asset_tag'] if device else '' }}" placeholder="e.g. NTS73117">
+    </div>
+    <div class="form-group">
+      <label>Serial Number</label>
+      <input type="text" name="serial_number" value="{{ device['serial_number'] if device else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Hostname / Computer Name</label>
+      <input type="text" name="hostname" value="{{ device['hostname'] if device else '' }}" placeholder="e.g. MPS-LAPTOP-001">
+    </div>
+    <div class="form-group">
+      <label>Make</label>
+      <select name="make">
+        <option value="">— Select —</option>
+        {% for m in MAKES %}
+          <option value="{{ m }}" {% if device and device['make']==m %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Model</label>
+      <input type="text" name="model" value="{{ device['model'] if device else '' }}" placeholder="e.g. Latitude 3420">
+    </div>
+  </div>
+
+  <div class="form-section-title">Assignment & Status</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Assigned To</label>
+      <input type="text" name="assigned_to" value="{{ device['assigned_to'] if device else '' }}" placeholder="Name or role">
+    </div>
+    <div class="form-group">
+      <label>Location</label>
+      <select name="location">
+        <option value="">— Select —</option>
+        {% for l in LOCATIONS %}
+          <option value="{{ l }}" {% if device and device['location']==l %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select name="status">
+        {% for s in STATUSES %}
+          <option value="{{ s }}" {% if device and device['status']==s %}selected{% elif not device and s=='available' %}selected{% endif %}>{{ s|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Condition</label>
+      <select name="condition">
+        {% for c in CONDITIONS %}
+          <option value="{{ c }}" {% if device and device['condition']==c %}selected{% elif not device and c=='Good' %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-section-title">Technical Details</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>OS Version</label>
+      <select name="os_version">
+        <option value="">— Select —</option>
+        {% for v in OS_VERSIONS %}
+          <option value="{{ v }}" {% if device and device['os_version']==v %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Last Reimaged</label>
+      <input type="date" name="last_reimaged" value="{{ device['last_reimaged'] if device else '' }}">
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="domain_joined" {% if device and device['domain_joined'] %}checked{% endif %}>
+        Domain Joined
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="bitlocker_enabled" {% if device and device['bitlocker_enabled'] %}checked{% endif %}>
+        BitLocker Enabled
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="mdm_enrolled" {% if device and device['mdm_enrolled'] %}checked{% endif %}>
+        JAMF / MDM Enrolled
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="charger_included" {% if device and device['charger_included'] %}checked{% endif %}>
+        Charger Included
+      </label>
+    </div>
+  </div>
+
+  <div class="form-section-title">Purchase & Warranty</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Purchase Date</label>
+      <input type="date" name="purchase_date" value="{{ device['purchase_date'] if device else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Purchase Price (AUD)</label>
+      <input type="number" name="purchase_price" value="{{ device['purchase_price'] if device else '' }}" step="0.01" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Warranty Expiry</label>
+      <input type="date" name="warranty_expiry" value="{{ device['warranty_expiry'] if device else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Funding Source</label>
+      <select name="funding_source">
+        <option value="">— Select —</option>
+        {% for f in FUNDING %}
+          <option value="{{ f }}" {% if device and device['funding_source']==f %}selected{% endif %}>{{ f }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Supplier</label>
+      <input type="text" name="supplier" value="{{ device['supplier'] if device else '' }}">
+    </div>
+    <div class="form-group">
+      <label>PO Number</label>
+      <input type="text" name="po_number" value="{{ device['po_number'] if device else '' }}">
+    </div>
+  </div>
+
+  <div class="form-section-title">Notes</div>
+  <div class="form-group full-width">
+    <label>Notes</label>
+    <textarea name="notes" rows="3">{{ device['notes'] if device else '' }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <a href="{{ url_for('devices') }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ 'Save Changes' if device else 'Add Device' }}</button>
+  </div>
+</form>
+{% endblock %}

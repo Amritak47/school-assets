@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Check In/Out{% endblock %}
+{% block page_title %}Check In / Out{% endblock %}
+
+{% block content %}
+<div class="dash-row">
+
+  <!-- Check out form -->
+  <div class="card">
+    <div class="card-head">Check Out a Device</div>
+    <form method="post" action="{{ url_for('checkout_new') }}" class="form-inline">
+      <div class="form-group">
+        <label>Device</label>
+        <select name="device_id" required>
+          <option value="">— Select Device —</option>
+          {% for d in devices %}
+            <option value="{{ d['id'] }}">{{ d['asset_tag'] or d['serial_number'] or '' }} — {{ d['device_type'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Borrower Name *</label>
+        <input type="text" name="borrower_name" required placeholder="Student or staff name">
+      </div>
+      <div class="form-group">
+        <label>Class / Room</label>
+        <input type="text" name="borrower_class" placeholder="e.g. Room 3">
+      </div>
+      <div class="form-group">
+        <label>Date Out</label>
+        <input type="date" name="checked_out_at" value="{{ today() }}">
+      </div>
+      <div class="form-group">
+        <label>Expected Return</label>
+        <input type="date" name="expected_return">
+      </div>
+      <div class="form-group full-width">
+        <label>Notes</label>
+        <textarea name="notes" rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Check Out</button>
+    </form>
+  </div>
+
+  <!-- Currently out -->
+  <div class="card">
+    <div class="card-head">Currently Checked Out <span class="badge badge-blue">{{ active|length }}</span></div>
+    {% if not active %}
+    <div class="empty-state-inline">No devices currently checked out.</div>
+    {% else %}
+    <table class="table">
+      <thead><tr><th>Device</th><th>Borrowed By</th><th>Date Out</th><th>Expected Back</th><th></th></tr></thead>
+      <tbody>
+        {% for c in active %}
+        {% set overdue = c['expected_return'] and is_expired(c['expected_return']) %}
+        <tr class="{{ 'row-warn' if overdue }}">
+          <td><strong>{{ c['asset_tag'] or c['serial_number'] or '—' }}</strong><br><small class="text-muted">{{ c['device_type'] or '' }}</small></td>
+          <td>{{ c['borrower_name'] or '—' }}{% if c['borrower_class'] %}<br><small class="text-muted">{{ c['borrower_class'] }}</small>{% endif %}</td>
+          <td>{{ fmt_date(c['checked_out_at']) }}</td>
+          <td>
+            {% if c['expected_return'] %}
+              {{ fmt_date(c['expected_return']) }}
+              {% if overdue %}<br><span class="badge badge-red">Overdue</span>{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('checkout_return', id=c['id']) }}" onsubmit="return confirm('Mark as returned?')">
+              <input type="hidden" name="condition" value="Good">
+              <button class="btn btn-sm btn-primary">Return</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- History -->
+<div class="card">
+  <div class="card-head">Return History</div>
+  {% if not history %}
+  <div class="empty-state-inline">No history yet.</div>
+  {% else %}
+  <table class="table">
+    <thead><tr><th>Device</th><th>Borrowed By</th><th>Checked Out</th><th>Returned</th><th>Duration</th></tr></thead>
+    <tbody>
+      {% for c in history %}
+      <tr>
+        <td>{{ c['asset_tag'] or c['serial_number'] or '—' }}<br><small class="text-muted">{{ c['device_type'] or '' }}</small></td>
+        <td>{{ c['borrower_name'] or '—' }}</td>
+        <td>{{ fmt_date(c['checked_out_at']) }}</td>
+        <td><span class="badge badge-green">{{ fmt_date(c['returned_at']) }}</span></td>
+        <td>
+          {% if c['checked_out_at'] and c['returned_at'] %}
+            {{ ((c['returned_at'][:10]|string)|replace('-','')|int - (c['checked_out_at'][:10]|string)|replace('-','')|int) }}
+            {% set delta = (c['returned_at'][:10], c['checked_out_at'][:10]) %}—
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

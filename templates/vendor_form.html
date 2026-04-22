@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('vendors') }}" class="btn btn-outline">← Back</a>{% endblock %}
+
+{% block content %}
+<form method="post" class="form-card">
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Vendor / Company Name *</label>
+      <input type="text" name="name" value="{{ vendor['name'] if vendor else '' }}" required placeholder="e.g. Dell Australia">
+    </div>
+    <div class="form-group">
+      <label>Categories</label>
+      <input type="text" name="categories" value="{{ vendor['categories'] if vendor else '' }}" placeholder="e.g. Laptops, Monitors">
+    </div>
+    <div class="form-group">
+      <label>Contact Person</label>
+      <input type="text" name="contact" value="{{ vendor['contact'] if vendor else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Phone</label>
+      <input type="text" name="phone" value="{{ vendor['phone'] if vendor else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" value="{{ vendor['email'] if vendor else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Website</label>
+      <input type="text" name="website" value="{{ vendor['website'] if vendor else '' }}" placeholder="e.g. dell.com/au">
+    </div>
+    <div class="form-group">
+      <label>Account Number</label>
+      <input type="text" name="account_number" value="{{ vendor['account_number'] if vendor else '' }}">
+    </div>
+    <div class="form-group full-width">
+      <label>Notes</label>
+      <textarea name="notes" rows="3">{{ vendor['notes'] if vendor else '' }}</textarea>
+    </div>
+  </div>
+  <div class="form-actions">
+    <a href="{{ url_for('vendors') }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ 'Save Changes' if vendor else 'Add Vendor' }}</button>
+  </div>
+</form>
+{% endblock %}

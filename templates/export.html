@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Export{% endblock %}
+{% block page_title %}Export & Backup{% endblock %}
+
+{% block content %}
+<div class="export-grid">
+
+  <div class="card">
+    <div class="card-head">Data Summary</div>
+    <div class="qs-list">
+      <div class="qs-row"><span>Total Devices</span><strong>{{ dev_count }}</strong></div>
+      <div class="qs-row"><span>Licences</span><strong>{{ lic_count }}</strong></div>
+      <div class="qs-row"><span>Maintenance Records</span><strong>{{ mnt_count }}</strong></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Download CSV Files</div>
+    <div class="export-actions">
+      <a href="{{ url_for('export_devices') }}" class="export-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <div>
+          <strong>Devices CSV</strong>
+          <span>All {{ dev_count }} devices with full details</span>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </a>
+      <a href="{{ url_for('export_licences') }}" class="export-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div>
+          <strong>Licences CSV</strong>
+          <span>All {{ lic_count }} software licences</span>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </a>
+      <a href="{{ url_for('export_maintenance') }}" class="export-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <div>
+          <strong>Maintenance CSV</strong>
+          <span>All {{ mnt_count }} maintenance records</span>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<div class="card info-card">
+  <div class="card-head">About Your Data</div>
+  <p>All data is stored in <strong>tracker.db</strong> — a SQLite file in the same folder as the app. To back up your data, simply copy that file to a USB drive or cloud storage.</p>
+  <p style="margin-top:0.5rem">To restore, replace the file and restart the app.</p>
+</div>
+{% endblock %}
