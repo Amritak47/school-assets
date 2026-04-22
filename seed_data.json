@@ -1,0 +1,1751 @@
+{
+  "monitors": [
+    {
+      "serial": "URHRA31V",
+      "model": "Lenevo 27 QHD Monitors",
+      "purchase_date": "2026-03-03",
+      "assigned_to": "Fiona Nixon",
+      "location": "Fiona's office",
+      "condition": "New",
+      "notes": "New \u2013 no issues"
+    },
+    {
+      "serial": "VNAG2TAZ",
+      "model": "Lenevo ThinkVision E24-30 24 inch",
+      "purchase_date": "2025-11-07",
+      "assigned_to": "Violette Batwenga",
+      "location": "Staff Room",
+      "condition": "New",
+      "notes": "New \u2013 no issues"
+    },
+    {
+      "serial": "VNAC2TB3",
+      "model": "Lenevo ThinkVision E24-30 24 inch",
+      "purchase_date": "2025-08-24",
+      "assigned_to": "Evanjalin Kirupairaj",
+      "location": "Staff Room",
+      "condition": "New",
+      "notes": "New \u2013 no issues"
+    },
+    {
+      "serial": "UHB2442005983",
+      "model": "Philips 27\" FHD 100Hz IPS USB-C",
+      "purchase_date": "2025-08-15",
+      "assigned_to": "Nicole Lyons",
+      "location": "Principal's office",
+      "condition": "New",
+      "notes": "New \u2013 no issues"
+    },
+    {
+      "serial": "UHB2424035802",
+      "model": "Philips 27\" FHD 100Hz IPS USB-C",
+      "purchase_date": "2025-08-15",
+      "assigned_to": "Nicole Lyons",
+      "location": "Principal's office",
+      "condition": "New",
+      "notes": "New \u2013 no issues"
+    },
+    {
+      "serial": "6LSKH9TX709077P",
+      "model": "Samsung LS24GD 24\" FHD 100Hz Curved Monitor",
+      "purchase_date": "2024-11-28",
+      "assigned_to": "Amrit Lamichhane",
+      "location": "Staff Room",
+      "condition": "Decent",
+      "notes": "no issue"
+    },
+    {
+      "serial": "6LSKH9TX709088M",
+      "model": "Samsung LS24GD 24\" FHD 100Hz Curved Monitor",
+      "purchase_date": "2024-11-28",
+      "assigned_to": "Amrit Lamichhane",
+      "location": "Staff Room",
+      "condition": "Decent",
+      "notes": "no issue"
+    },
+    {
+      "serial": "CN-OHWNG7-74261-54H-070L",
+      "model": "Dell Monitor",
+      "purchase_date": null,
+      "assigned_to": "Rachel Trier",
+      "location": "Staff Room",
+      "condition": "old",
+      "notes": "very old"
+    },
+    {
+      "serial": "AU02329006952",
+      "model": "Philips Monitor",
+      "purchase_date": null,
+      "assigned_to": "Erin",
+      "location": "Principal's office",
+      "condition": "Decent",
+      "notes": "no issue"
+    },
+    {
+      "serial": "CN-09W5YH-74261-53B-0KCS",
+      "model": "Dell Monitor",
+      "purchase_date": null,
+      "assigned_to": "Joanne Bernattek",
+      "location": "Front office",
+      "condition": "old",
+      "notes": "very old"
+    }
+  ],
+  "pcs": [
+    {
+      "serial": "77KYNT3",
+      "model": "Dell Optiplex 7400 AIO",
+      "purchase_date": "2022-11-21",
+      "assigned_to": "Rachel Trier",
+      "location": "Staff Room",
+      "condition": "Working good",
+      "notes": "reimaged jan 2026"
+    },
+    {
+      "serial": "DG04S63",
+      "model": "Dell Optiplex 7480 AIO",
+      "purchase_date": "2021-12-17",
+      "assigned_to": "Maria Sanchez",
+      "location": "Business Manager room",
+      "condition": "Working good",
+      "notes": "Need to reimage to windows 11"
+    },
+    {
+      "serial": "FD0437",
+      "model": "Lenevo All in one",
+      "purchase_date": "2025-08-29",
+      "assigned_to": "Joanne Bernattek",
+      "location": "Front office",
+      "condition": "New",
+      "notes": "new"
+    },
+    {
+      "serial": "67KYNT3",
+      "model": "Dell Optiplex 7400 AIO",
+      "purchase_date": "2022-11-21",
+      "assigned_to": "Jodie",
+      "location": "Library",
+      "condition": "Working good",
+      "notes": "reimaged Nov 2025"
+    },
+    {
+      "serial": "FD0273",
+      "model": "Standard Desktop Microtower",
+      "purchase_date": "2025-08-29",
+      "assigned_to": "Server Room",
+      "location": "Server room",
+      "condition": "new",
+      "notes": "new"
+    }
+  ],
+  "teachers": [
+    {
+      "serial": "PW-0HTVKL",
+      "asset_tag": "FL7954",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Erin",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV0DS",
+      "asset_tag": "FL7957",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Nicole",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HTVJE",
+      "asset_tag": "FL7940",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Guppy, Crystabelle",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV0FJ",
+      "asset_tag": "FL7931",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Angela Gahan",
+      "notes": "Need Update to windows 11"
+    },
+    {
+      "serial": "PW-0HV0GJ",
+      "asset_tag": "FL7929",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Barbara Doukas",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HTVJM",
+      "asset_tag": "FL7953",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Fiona Nixon",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HTVFK",
+      "asset_tag": "FL7943",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Tippett Michell",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV094",
+      "asset_tag": "FL7951",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Merran Kamitsis",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV0EV",
+      "asset_tag": "FL7955",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Neisha Schilling",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV0F5",
+      "asset_tag": "FL7941",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Krystal Schey",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV07R",
+      "asset_tag": "FL7933",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Rachel Birkin",
+      "notes": ""
+    },
+    {
+      "serial": "PW-OHV0EF",
+      "asset_tag": "FL7956",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Kristy Love",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV06D",
+      "asset_tag": "FL7930",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Kathy Downing",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV0HK",
+      "asset_tag": "FL7928",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Angelina Andreou",
+      "notes": ""
+    },
+    {
+      "serial": "PW-0HV0F1",
+      "asset_tag": "FL7932",
+      "make": "Lenovo",
+      "model": "Think Pad L14 Gen 5",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Merran Coughlan",
+      "notes": ""
+    },
+    {
+      "serial": "PW-OHV0F6",
+      "asset_tag": "FL7952",
+      "make": "Lenovo",
+      "model": "Moil Primary School",
+      "purchase_date": "2025-09-23",
+      "assigned_to": "Alex",
+      "notes": ""
+    },
+    {
+      "serial": "PW-OHTT1X",
+      "asset_tag": "FL5927",
+      "make": "Lenovo",
+      "model": "Moil Primary School",
+      "purchase_date": "2025-10-23",
+      "assigned_to": "Riko Yang",
+      "notes": ""
+    }
+  ],
+  "pclab": [
+    {
+      "serial": "GM18ALSB",
+      "asset_tag": "FD1705",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALX2",
+      "asset_tag": "FD1715",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18AM00",
+      "asset_tag": "FD1717",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSX",
+      "asset_tag": "FD1714",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSL",
+      "asset_tag": "FD1704",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALVZ",
+      "asset_tag": "FD1713",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALT6",
+      "asset_tag": "FD1708",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSN",
+      "asset_tag": "FD1709",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSF",
+      "asset_tag": "FD1716",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALST",
+      "asset_tag": "FD1711",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18AM02",
+      "asset_tag": "FD1696",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSS",
+      "asset_tag": "FD1712",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSP",
+      "asset_tag": "FD1697",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALS6",
+      "asset_tag": "FD1695",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALZ4",
+      "asset_tag": "FD1700",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18AL09",
+      "asset_tag": "FD1703",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSH",
+      "asset_tag": "FD1701",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALZT",
+      "asset_tag": "FD1710",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSQ",
+      "asset_tag": "FD1706",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSR",
+      "asset_tag": "FD1719",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALS5",
+      "asset_tag": "FD1699",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSZ",
+      "asset_tag": "FD1707",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSY",
+      "asset_tag": "FD1718",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALS7",
+      "asset_tag": "FD1694",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSE",
+      "asset_tag": "FD1720",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALWX",
+      "asset_tag": "FD1702",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    },
+    {
+      "serial": "GM18ALSM",
+      "asset_tag": "FD1722",
+      "model": "ThinkCentre M70q Gen5",
+      "purchase_date": "2026-10-02",
+      "location": "Corner Room",
+      "condition": "New"
+    }
+  ],
+  "staff": [
+    {
+      "serial": "1HX35B3",
+      "asset_tag": "NTS73117",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-10",
+      "assigned_to": "Placement Student  Ms Guppy, 16/03/2026 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "1SX45B3",
+      "asset_tag": "NTS71611",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "2HX35B3",
+      "asset_tag": "NTS73118",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "Thomas- 9/10 current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "7GX35B3",
+      "asset_tag": "NTS73107",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-10",
+      "assigned_to": "ICT Room,09/10/2025 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "8GX35B3",
+      "asset_tag": "NTS73108",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-10",
+      "assigned_to": "ICT, 09/10/2025 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "9GX35B3",
+      "asset_tag": "NTS73109",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "ICT, 01/06/2023 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "9T5X8G3",
+      "asset_tag": "NTS74228",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-09-07",
+      "warranty_expiry": "2024-08-16",
+      "assigned_to": "ICT Room, 16/12/2024 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "CD8X8G3",
+      "asset_tag": "NTS74413",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-08-13",
+      "warranty_expiry": "2024-08-17",
+      "assigned_to": "ICT ,  23/02/2026-Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "CGX35B3",
+      "asset_tag": "NTS73111",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "Evanjalin  13/04/2025 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "DGX35B3",
+      "asset_tag": "NTS73112",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "ICT Room 18/11/2024",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "FGX35B3",
+      "asset_tag": "NTS73113",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "Angelina Andreou - 02/02/24",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "GGX35B3",
+      "asset_tag": "NTS73114",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "ICT Room, 09/10/2025 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "HGX35B3",
+      "asset_tag": "NTS73115",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "lee Coubrough 18/03/2026",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "HH6X8G3",
+      "asset_tag": "NTS73396",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-09-07",
+      "warranty_expiry": "2024-08-17",
+      "assigned_to": "ICT, 08/17/2024 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "JGX35B3",
+      "asset_tag": "NTS73116",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "ICT- Issue now",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "9PJ75B3",
+      "asset_tag": "NTS74665",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": null,
+      "assigned_to": "Business manager, 20/10/25 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "3PV45B3",
+      "asset_tag": "NTS71745",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-10",
+      "assigned_to": "ICT 13/04/2025- Current",
+      "notes": "Bitlocked locked"
+    },
+    {
+      "serial": "BPV45B3",
+      "asset_tag": "NT S71752",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-10",
+      "assigned_to": "ICT Room- 9/10/2025  current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "D96X8G3",
+      "asset_tag": "NTS74216",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-18",
+      "assigned_to": "CDU Social Worker Placement- KUS--17/03/2026",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "JFV45B3",
+      "asset_tag": "NTS72069",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-17",
+      "assigned_to": "Violette, 9/10/2025 - Current",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "JFV45B3",
+      "asset_tag": "NTS72069",
+      "make": "Dell",
+      "model": "Latitude 5320 2in1 Touch",
+      "purchase_date": "2021-05-27",
+      "warranty_expiry": "2024-08-17",
+      "assigned_to": "",
+      "notes": "Reimaged to windows 11"
+    },
+    {
+      "serial": "7BZZSTP2",
+      "asset_tag": "NTS60197",
+      "make": "Dell",
+      "model": "Latitude 7390 2 in 1",
+      "purchase_date": "2018-05-01",
+      "warranty_expiry": null,
+      "assigned_to": "Joanne Bernattek",
+      "notes": "17.07.2023 - Working Well"
+    },
+    {
+      "serial": "39ZSTP2",
+      "asset_tag": "NTS60196",
+      "make": "Dell",
+      "model": "Latitude 7390 2 in 1",
+      "purchase_date": "2018-05-01",
+      "warranty_expiry": null,
+      "assigned_to": "Heidi Sutton",
+      "notes": "17.07.2023 - Working Well"
+    },
+    {
+      "serial": "HBZSTP2",
+      "asset_tag": "",
+      "make": "Dell",
+      "model": "Dell Latitude 7390 2 in 1",
+      "purchase_date": "2018-05-01",
+      "warranty_expiry": null,
+      "assigned_to": "ICT Room",
+      "notes": "17.07.2023 - Power Issue"
+    },
+    {
+      "serial": "2V65VN2",
+      "asset_tag": "NTS57777",
+      "make": "Dell",
+      "model": "Dell Latitude 7390 2 in 1",
+      "purchase_date": "2018-05-01",
+      "warranty_expiry": null,
+      "assigned_to": "Acacia Smart Board (Rachel)",
+      "notes": "Some keyboard issue"
+    },
+    {
+      "serial": "JY43VP2",
+      "asset_tag": "NTS59184",
+      "make": "Dell",
+      "model": "Dell Latitude 7390 2 in 1",
+      "purchase_date": "2018-05-01",
+      "warranty_expiry": null,
+      "assigned_to": "ICT Room",
+      "notes": "17.07.2023 - Working Well"
+    },
+    {
+      "serial": "GPBTTP2",
+      "asset_tag": "",
+      "make": "Dell",
+      "model": "Dell Latitude 7390 2 in 1",
+      "purchase_date": "2026-05-18",
+      "warranty_expiry": null,
+      "assigned_to": "ict Room 9/10/2025 - current",
+      "notes": "17.07.2023 - Working Well"
+    },
+    {
+      "serial": "9NHTTP2",
+      "asset_tag": "NTS60199",
+      "make": "Dell",
+      "model": "Dell Latitude 7390 2 in 1",
+      "purchase_date": "2026-05-18",
+      "warranty_expiry": null,
+      "assigned_to": "ICT 18/03/2026",
+      "notes": "19.09.2024 - Working Well"
+    }
+  ],
+  "students": [
+    {
+      "serial": "HQHK7S2",
+      "asset_tag": "NTS61847",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "1JLK7S2",
+      "asset_tag": "NTS61846",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 -Working well",
+      "warranty_expiry": null,
+      "location": "Student Support"
+    },
+    {
+      "serial": "19XR7S2",
+      "asset_tag": "NTS61844",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - can't join domain",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "1FLK7S2",
+      "asset_tag": "NTS61841",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Student Support"
+    },
+    {
+      "serial": "4QHK7S2",
+      "asset_tag": "NTS61848",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "HFLK7S2",
+      "asset_tag": "NTS61840",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "HDLK7S2",
+      "asset_tag": "NTS61842",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "7KLK7S2",
+      "asset_tag": "NTS61845",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "66VRM13",
+      "asset_tag": "NTS68522",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "8NHK7S2",
+      "asset_tag": "NTS61843",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "90VRM13",
+      "asset_tag": "NTS68519",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "HCWRM13",
+      "asset_tag": "NTS68511",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 -  Working Well",
+      "warranty_expiry": null,
+      "location": "Desert Rose"
+    },
+    {
+      "serial": "77STST3",
+      "asset_tag": "NTS79418",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 (Orange)"
+    },
+    {
+      "serial": "1MYTST3",
+      "asset_tag": "NTS79422",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Trolly 3 (Orange)"
+    },
+    {
+      "serial": "C0DYTT3",
+      "asset_tag": "NTS79403",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": null,
+      "location": "Trolly 3 (Orange)"
+    },
+    {
+      "serial": "7KYTST3",
+      "asset_tag": "NTS79415",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 Orange)"
+    },
+    {
+      "serial": "HJYTST3",
+      "asset_tag": "NTS79426",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-20",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "HGYTST3",
+      "asset_tag": "NTS79424",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "88STST3",
+      "asset_tag": "NTS79416",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "3ZYRST3",
+      "asset_tag": "NTS79409",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "28STST3",
+      "asset_tag": "NTS79427",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "27VRM13",
+      "asset_tag": "NTS68512",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "HDWRM13",
+      "asset_tag": "NTS68524",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 3 (Orange)"
+    },
+    {
+      "serial": "1LWRM13",
+      "asset_tag": "NTS68506",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 (Orange)"
+    },
+    {
+      "serial": "6DKYTT3",
+      "asset_tag": "NTS79410",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "914VST3",
+      "asset_tag": "NTS79413",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "11.19.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 3 (orange)"
+    },
+    {
+      "serial": "FXZRM13",
+      "asset_tag": "NTS68501",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 1 (white)"
+    },
+    {
+      "serial": "3SSRM13",
+      "asset_tag": "NTS68523",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "6ZYRM13",
+      "asset_tag": "NTS68503",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "9YZRM13",
+      "asset_tag": "NTS68500",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "D1ZRM13",
+      "asset_tag": "NTS68502",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "C2VRM13",
+      "asset_tag": "NTS68516",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "17.07.2023 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "7L1SM13",
+      "asset_tag": "NTS68521",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "16.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "G0STST3",
+      "asset_tag": "NTS79401",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "JGWRM13",
+      "asset_tag": "NTS68509",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "DZ2SM13",
+      "asset_tag": "NTS68518",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "36VRM13",
+      "asset_tag": "NTS68513",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "9DWRM13",
+      "asset_tag": "NTS68510",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "7JWRM13",
+      "asset_tag": "NTS68508",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "DLWRM13",
+      "asset_tag": "NTS68505",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "25VRM13",
+      "asset_tag": "NTS68525",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "3WPNM13",
+      "asset_tag": "NTS68517",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "DM1SM13",
+      "asset_tag": "NTS68526",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "19.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-21",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "5KWRM13",
+      "asset_tag": "NTS68507",
+      "model": "Dell Latitude 3190",
+      "purchase_date": "2026-03-20",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2023-03-20",
+      "location": "Trolly 4 (white)"
+    },
+    {
+      "serial": "3CKYTT3",
+      "asset_tag": "NTS79407",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "4JYTST3",
+      "asset_tag": "NTS79421",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "JCKYTT3",
+      "asset_tag": "NTS79399",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "48STST3",
+      "asset_tag": "NTS79425",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "89KYTT3",
+      "asset_tag": "NTS79406",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "86STST3",
+      "asset_tag": "NTS79417",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "DCKYTT3",
+      "asset_tag": "NTS79400",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "FKYTST3",
+      "asset_tag": "NTS79419",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "G4STST3",
+      "asset_tag": "NTS79412",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "5RYTST3",
+      "asset_tag": "NTS79414",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "FLYTST3",
+      "asset_tag": "NTS79423",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "21DYTT3",
+      "asset_tag": "NTS79405",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "98KYTT3",
+      "asset_tag": "NTS79404",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (grey)"
+    },
+    {
+      "serial": "HMYTST3",
+      "asset_tag": "NTS79420",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (gray)"
+    },
+    {
+      "serial": "H1STST3",
+      "asset_tag": "NTS79398",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "11.19.2024 - Working Well",
+      "warranty_expiry": "2025-11-19",
+      "location": "Trolly 2 (gray)"
+    },
+    {
+      "serial": "FHKYTT3",
+      "asset_tag": "NTS79402",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2024 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (gray)"
+    },
+    {
+      "serial": "7HKYTT3",
+      "asset_tag": "NTS79411",
+      "model": "Dell Latitude 11 3120",
+      "purchase_date": "2026-11-22",
+      "notes": "23.09.2043 - Working Well",
+      "warranty_expiry": "2025-11-18",
+      "location": "Trolly 2 (gray)"
+    },
+    {
+      "serial": "B4N9Y74",
+      "asset_tag": "NTS86820",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "C46MY74",
+      "asset_tag": "NTS86822",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "DQFBY74",
+      "asset_tag": "NTS86813",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "HJW9Y74",
+      "asset_tag": "NTS86816",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "HPQBY74",
+      "asset_tag": "NT586819",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "8YVBY74",
+      "asset_tag": "NTS86809",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "8SV8Y74",
+      "asset_tag": "NTS86810",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "6TV8Y74",
+      "asset_tag": "NTS86811",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "FWH9Y74",
+      "asset_tag": "NTS86823",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "HD5BY74",
+      "asset_tag": "NTS86814",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "5B0BY74",
+      "asset_tag": "NTS86814",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "3TFBY74",
+      "asset_tag": "NTS86812",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "70R9Y74",
+      "asset_tag": "NTS86817",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -Working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "9DNCY74",
+      "asset_tag": "NTS86818",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "13.02.2025 -working well",
+      "warranty_expiry": "2028-01-25",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "BZTW094",
+      "asset_tag": "NTS87181",
+      "model": "Dell Latitude 3140",
+      "purchase_date": "2026-01-25",
+      "notes": "24.03.2025-working well",
+      "warranty_expiry": "2028-11-03",
+      "location": "Trolly 1(Green)"
+    },
+    {
+      "serial": "",
+      "asset_tag": "",
+      "model": "",
+      "purchase_date": null,
+      "notes": "",
+      "warranty_expiry": null,
+      "location": ""
+    },
+    {
+      "serial": "",
+      "asset_tag": "",
+      "model": "",
+      "purchase_date": null,
+      "notes": "",
+      "warranty_expiry": null,
+      "location": ""
+    },
+    {
+      "serial": "",
+      "asset_tag": "",
+      "model": "",
+      "purchase_date": null,
+      "notes": "",
+      "warranty_expiry": null,
+      "location": ""
+    },
+    {
+      "serial": "",
+      "asset_tag": "",
+      "model": "",
+      "purchase_date": null,
+      "notes": "",
+      "warranty_expiry": null,
+      "location": ""
+    }
+  ],
+  "ipads": [
+    {
+      "serial": "DMPY4XYJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY42J4JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WNRJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WNGJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4YW7JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4U6VJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4XPJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4U6JJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WYLJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY41EFJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPCMACVMF3Q",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4W5GJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY43AGJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4VULJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4TBJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4ZM8JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WT6JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY41M5JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4YPJJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY42S7JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY42JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WM0JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WLAJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WQWJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WRJ9MVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY410BJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WV0JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY42L0JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4WG9JMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4L6ZJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMQY40BHJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4X1FJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    },
+    {
+      "serial": "DMPY4W9VJMVT",
+      "asset_tag": "",
+      "model": "iPad gen 6th",
+      "purchase_date": null,
+      "notes": "working well"
+    }
+  ]
+}
