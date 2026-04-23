@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     invoice_number TEXT,
     payment_status TEXT DEFAULT 'paid',
     notes TEXT,
+    file_path TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -160,6 +161,7 @@ def get_db():
 def init_db():
     conn = get_db()
     conn.executescript(SCHEMA)
+    _migrate(conn)
     conn.commit()
 
     # Only seed if empty
@@ -167,6 +169,19 @@ def init_db():
     if row['c'] == 0:
         _seed(conn)
     conn.close()
+
+
+def _migrate(conn):
+    """Apply schema migrations for columns added after initial release."""
+    migrations = [
+        "ALTER TABLE invoices ADD COLUMN file_path TEXT",
+    ]
+    for sql in migrations:
+        try:
+            conn.execute(sql)
+            conn.commit()
+        except Exception:
+            pass
 
 
 def _seed(conn):

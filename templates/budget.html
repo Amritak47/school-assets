@@ -3,6 +3,10 @@
 {% block page_title %}Budget & Invoices{% endblock %}
 
 {% block topbar_actions %}
+  <a href="{{ url_for('budget', year=year, export='csv') }}" class="btn btn-outline">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export CSV
+  </a>
   <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add Invoice
@@ -19,7 +23,7 @@
   {% endfor %}
 </div>
 
-<!-- Summary cards -->
+<!-- Summary stat cards -->
 <div class="budget-summary">
   <div class="stat-card">
     <div class="stat-icon blue">
@@ -36,26 +40,74 @@
     </div>
     <div>
       <div class="stat-value">{{ invoices|length }}</div>
-      <div class="stat-label">Invoices</div>
+      <div class="stat-label">Invoices Shown</div>
     </div>
   </div>
-  {% for cat, amt in by_cat.items() %}
   <div class="stat-card">
-    <div class="stat-icon gray">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
     </div>
     <div>
-      <div class="stat-value" style="font-size:18px">{{ fmt_currency(amt) }}</div>
-      <div class="stat-label">{{ cat }}</div>
+      <div class="stat-value">{{ fmt_currency(paid_total) }}</div>
+      <div class="stat-label">Paid</div>
     </div>
   </div>
-  {% endfor %}
+  {% if pending_total > 0 %}
+  <div class="stat-card">
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ fmt_currency(pending_total) }}</div>
+      <div class="stat-label">Pending</div>
+    </div>
+  </div>
+  {% endif %}
+  {% if overdue_total > 0 %}
+  <div class="stat-card card-alert">
+    <div class="stat-icon red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div>
+      <div class="stat-value">{{ fmt_currency(overdue_total) }}</div>
+      <div class="stat-label">Overdue</div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 
-<!-- Spend by category bar chart -->
+<!-- Charts row -->
+<div class="budget-charts-row">
+  <div class="card budget-chart-card">
+    <div class="card-head">Monthly Spending — {{ year }}</div>
+    <div class="budget-chart-wrap">
+      <canvas id="chart-monthly"></canvas>
+    </div>
+  </div>
+  <div class="card budget-chart-card">
+    <div class="card-head">By Category</div>
+    <div class="budget-chart-wrap">
+      <canvas id="chart-category"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Vendor bar chart -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-head">Top Vendors — {{ year }}</div>
+  <div class="budget-chart-wrap" style="height:200px">
+    <canvas id="chart-vendors"></canvas>
+  </div>
+</div>
+
+<!-- Category progress bars (filtered) -->
 {% if by_cat %}
 <div class="card" style="margin-bottom:20px">
-  <div class="card-head">Spend by Category — {{ year }}</div>
+  <div class="card-head">Spend by Category
+    {% if search or vendor_f or cat_f or status_f or date_from or date_to %}
+    <span class="badge badge-orange" style="font-size:11px">Filtered</span>
+    {% endif %}
+  </div>
   <div style="padding:14px 18px">
     {% for cat, amt in by_cat.items()|sort(attribute='1', reverse=true) %}
     {% set pct = (amt / total * 100) if total else 0 %}
@@ -69,16 +121,54 @@
 </div>
 {% endif %}
 
-<!-- Invoice list -->
-<div class="card">
+<!-- Invoice list with filters -->
+<div class="card" style="margin-bottom:20px">
   <div class="card-head">
-    All Invoices — {{ year }}
+    Invoices — {{ year }}
     <span class="badge badge-blue">{{ invoices|length }}</span>
   </div>
+
+  <!-- Filter bar -->
+  <form method="get" action="{{ url_for('budget') }}" class="budget-filter-bar">
+    <input type="hidden" name="year" value="{{ year }}">
+    <div class="search-box" style="flex:1;min-width:200px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" value="{{ search }}" placeholder="Search description, vendor, invoice #…">
+    </div>
+    <select name="vendor">
+      <option value="">All Vendors</option>
+      {% for v in vendors_list %}
+      <option value="{{ v }}" {% if v == vendor_f %}selected{% endif %}>{{ v }}</option>
+      {% endfor %}
+    </select>
+    <select name="cat">
+      <option value="">All Categories</option>
+      {% for c in INVOICE_CATEGORIES %}
+      <option value="{{ c }}" {% if c == cat_f %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">All Statuses</option>
+      {% for s in PAYMENT_STATUSES %}
+      <option value="{{ s }}" {% if s == status_f %}selected{% endif %}>{{ s|title }}</option>
+      {% endfor %}
+    </select>
+    <div class="budget-date-range">
+      <input type="date" name="date_from" value="{{ date_from }}" title="From date">
+      <span style="color:var(--text-3);font-size:12px">to</span>
+      <input type="date" name="date_to" value="{{ date_to }}" title="To date">
+    </div>
+    <button type="submit" class="btn btn-outline btn-sm">Filter</button>
+    {% if search or vendor_f or cat_f or status_f or date_from or date_to %}
+    <a href="{{ url_for('budget', year=year) }}" class="btn btn-ghost btn-sm">Clear</a>
+    {% endif %}
+  </form>
+
   {% if not invoices %}
-  <div class="empty-state-inline">No invoices for {{ year }}. <a href="{{ url_for('invoice_new') }}" style="color:var(--blue)">Add one</a>.</div>
+  <div class="empty-state-inline">No invoices match your filters. <a href="{{ url_for('invoice_new') }}" style="color:var(--blue)">Add one</a>.</div>
   {% else %}
-  <table class="table">
+  <div style="overflow-x:auto">
+  <table class="table" id="invoice-table">
     <thead>
       <tr>
         <th>Date</th>
@@ -88,6 +178,7 @@
         <th>Invoice #</th>
         <th>Status</th>
         <th style="text-align:right">Amount (inc GST)</th>
+        <th>File</th>
         <th></th>
       </tr>
     </thead>
@@ -95,48 +186,200 @@
       {% for inv in invoices %}
       <tr>
         <td class="mono">{{ fmt_date(inv['date']) }}</td>
-        <td><strong>{{ inv['description'] }}</strong>
+        <td>
+          <strong>{{ inv['description'] }}</strong>
           {% if inv['po_number'] %}<br><small class="text-muted">PO: {{ inv['po_number'] }}</small>{% endif %}
         </td>
         <td>{{ inv['vendor'] or '—' }}</td>
         <td><span class="badge badge-gray">{{ inv['category'] }}</span></td>
         <td class="mono text-muted">{{ inv['invoice_number'] or '—' }}</td>
         <td>
-          {% if inv['payment_status'] == 'paid' %}
-            <span class="badge badge-green">Paid</span>
-          {% elif inv['payment_status'] == 'pending' %}
-            <span class="badge badge-orange">Pending</span>
-          {% elif inv['payment_status'] == 'overdue' %}
-            <span class="badge badge-red">Overdue</span>
-          {% else %}
-            <span class="badge badge-gray">{{ inv['payment_status']|title }}</span>
+          {% if inv['payment_status'] == 'paid' %}<span class="badge badge-green">Paid</span>
+          {% elif inv['payment_status'] == 'pending' %}<span class="badge badge-orange">Pending</span>
+          {% elif inv['payment_status'] == 'overdue' %}<span class="badge badge-red">Overdue</span>
+          {% else %}<span class="badge badge-gray">{{ inv['payment_status']|title }}</span>
           {% endif %}
         </td>
         <td style="text-align:right;font-weight:700">{{ fmt_currency(inv['amount']) }}</td>
+        <td>
+          {% if inv['file_path'] %}
+          <a href="{{ url_for('invoice_file', filename=inv['file_path']) }}" target="_blank" class="doc-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            View
+          </a>
+          {% else %}
+          <span class="text-muted" style="font-size:12px">—</span>
+          {% endif %}
+        </td>
         <td class="action-cell">
           <a href="{{ url_for('invoice_edit', id=inv['id']) }}" class="btn-icon" title="Edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </a>
           <form method="post" action="{{ url_for('invoice_delete', id=inv['id']) }}" style="display:inline" onsubmit="return confirm('Delete this invoice?')">
             <button class="btn-icon btn-icon-danger" title="Delete">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </form>
         </td>
       </tr>
       {% if inv['notes'] %}
-      <tr class="notes-row"><td colspan="8" class="note-cell">{{ inv['notes'] }}</td></tr>
+      <tr class="notes-row"><td colspan="9" class="note-cell">{{ inv['notes'] }}</td></tr>
       {% endif %}
       {% endfor %}
     </tbody>
     <tfoot>
       <tr style="background:#F9FAFB;font-weight:700">
-        <td colspan="6" style="padding:10px 16px;font-size:13px">Total</td>
+        <td colspan="6" style="padding:10px 16px;font-size:13px">Total (filtered)</td>
         <td style="padding:10px 16px;text-align:right;font-size:15px;color:var(--blue)">{{ fmt_currency(total) }}</td>
-        <td></td>
+        <td colspan="2"></td>
       </tr>
     </tfoot>
   </table>
+  </div>
   {% endif %}
 </div>
+
+<!-- Document Library -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-head">
+    Document Library
+    <span class="badge badge-gray">{{ github_docs|length }} files</span>
+  </div>
+  <div style="padding:16px 18px">
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:14px">Uploaded purchase orders, quotes and invoices. Click to open in a new tab.</p>
+    <div class="doc-library-grid">
+      {% for doc in github_docs %}
+      {% set enc_file = doc.file.replace(' ', '%20') %}
+      <a href="{{ github_raw_base }}{{ enc_file }}" target="_blank" class="doc-card">
+        {% set ext = doc.file.split('.')[-1].lower() %}
+        {% if ext == 'pdf' %}
+        <div class="doc-card-icon doc-icon-red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>PDF</span>
+        </div>
+        {% elif ext in ['docx','doc'] %}
+        <div class="doc-card-icon doc-icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>DOC</span>
+        </div>
+        {% else %}
+        <div class="doc-card-icon doc-icon-gray">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>FILE</span>
+        </div>
+        {% endif %}
+        <div class="doc-card-body">
+          <div class="doc-card-name">{{ doc.name }}</div>
+          <div class="doc-card-meta">
+            <span class="badge badge-gray" style="font-size:10px">{{ doc.type }}</span>
+            {% if doc.vendor %}<span style="font-size:11px;color:var(--text-3)"> · {{ doc.vendor }}</span>{% endif %}
+          </div>
+        </div>
+        <svg class="doc-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const palette = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#EC4899','#14B8A6','#F97316'];
+  const gridColor = 'rgba(0,0,0,0.06)';
+  const textColor = '#6B7280';
+
+  const monthRaw = {{ month_labels }};
+  const monthLabels = monthRaw.map(m => {
+    const [y, mn] = m.split('-');
+    return new Date(parseInt(y), parseInt(mn) - 1).toLocaleString('default', {month: 'short'});
+  });
+  const monthData = {{ month_data }};
+
+  new Chart(document.getElementById('chart-monthly'), {
+    type: 'bar',
+    data: {
+      labels: monthLabels,
+      datasets: [{
+        label: 'Spend',
+        data: monthData,
+        backgroundColor: monthData.map(v => v > 0 ? 'rgba(59,130,246,0.75)' : 'rgba(59,130,246,0.2)'),
+        borderColor: '#3B82F6',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString('en-AU', {minimumFractionDigits:2}) } }
+      },
+      scales: {
+        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) }, grid: { color: gridColor } }
+      },
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+  const catRaw = {{ by_cat_all }};
+  if (catRaw.length > 0) {
+    new Chart(document.getElementById('chart-category'), {
+      type: 'doughnut',
+      data: {
+        labels: catRaw.map(c => c[0]),
+        datasets: [{
+          data: catRaw.map(c => c[1]),
+          backgroundColor: palette,
+          borderWidth: 2,
+          borderColor: '#fff',
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        cutout: '60%',
+        plugins: {
+          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 10, boxWidth: 12 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.raw.toFixed(2)}` } }
+        },
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
+
+  const vendorRaw = {{ top_vendors }};
+  if (vendorRaw.length > 0) {
+    new Chart(document.getElementById('chart-vendors'), {
+      type: 'bar',
+      data: {
+        labels: vendorRaw.map(v => v[0]),
+        datasets: [{
+          label: 'Spend',
+          data: vendorRaw.map(v => v[1]),
+          backgroundColor: palette,
+          borderWidth: 0,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString('en-AU', {minimumFractionDigits:2}) } }
+        },
+        scales: {
+          x: { ticks: { color: textColor, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) }, grid: { color: gridColor } },
+          y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
+        },
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
+})();
+</script>
+
 {% endblock %}

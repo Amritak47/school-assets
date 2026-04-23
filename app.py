@@ -1,10 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, g, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, flash, g, jsonify, Response, send_from_directory
 import sqlite3, csv, io, json, os, shutil, threading, time
 from datetime import datetime, date, timedelta
+from werkzeug.utils import secure_filename
 from db import get_db, init_db, DB_PATH
 
 app = Flask(__name__)
 app.secret_key = 'moil-primary-it-tracker-2026'
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB max upload
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'invoices')
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'docx', 'doc', 'xlsx'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 DEVICE_TYPES = ['Student Laptop','Staff Laptop','Teacher Laptop','Desktop PC',
                 'New PC Lab PC','Monitor','iPad','Other']
@@ -572,12 +581,69 @@ def export_backup_manual():
 
 # ─── Budget / Invoices ────────────────────────────────────────────────────────
 
+GITHUB_DOCS = [
+    {'name': 'Officeworks Invoice 624729245', 'file': 'Officeworks Invoice 624729245.pdf', 'type': 'Invoice', 'vendor': 'Officeworks'},
+    {'name': 'PO – Integral Digital 15500143', 'file': 'PO - Integral Digital 15500143.pdf', 'type': 'Purchase Order', 'vendor': 'Integral Digital'},
+    {'name': 'PO – Territory Technology Solutions 15500158', 'file': 'PO15500158  - Territory Technology Solutions.pdf', 'type': 'Purchase Order', 'vendor': 'Territory Technology Solutions'},
+    {'name': 'Purchase Order PO15500150', 'file': 'Purchase Order PO15500150.pdf', 'type': 'Purchase Order', 'vendor': ''},
+    {'name': 'Purchase Order PO15500151', 'file': 'Purchase Order PO15500151.pdf', 'type': 'Purchase Order', 'vendor': ''},
+    {'name': 'Purchase Order PO15500171', 'file': 'Purchase Order PO15500171.pdf', 'type': 'Purchase Order', 'vendor': ''},
+    {'name': 'Quote 10206414', 'file': 'Quote 10206414.pdf', 'type': 'Quote', 'vendor': ''},
+    {'name': 'Quote 64804v1', 'file': 'Quote_64804v1.pdf', 'type': 'Quote', 'vendor': ''},
+    {'name': 'Order Document', 'file': 'order-document.pdf', 'type': 'Order', 'vendor': ''},
+    {'name': 'Order Document (2)', 'file': 'order-document (1).pdf', 'type': 'Order', 'vendor': ''},
+    {'name': 'Purchase Order Request Form', 'file': 'Purchase Order Request Form.docx', 'type': 'Form', 'vendor': ''},
+    {'name': 'Monitor Spec Sheet', 'file': 'monitor.docx', 'type': 'Document', 'vendor': ''},
+]
+
+GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/Amritak47/school-assets/claude/device-inventory-tracker-TkvVj/'
+
+
 @app.route('/budget')
 def budget():
     db = g.db
     year = request.args.get('year', date.today().year, type=int)
-    invoices = db.execute(
-        "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date DESC",
+
+    # CSV export
+    if request.args.get('export') == 'csv':
+        return _export_invoices_csv(db, year)
+
+    # Filter params
+    search = request.args.get('q', '').strip()
+    vendor_f = request.args.get('vendor', '')
+    cat_f = request.args.get('cat', '')
+    status_f = request.args.get('status', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+
+    # Filtered invoices
+    query = "SELECT * FROM invoices WHERE strftime('%Y', date)=?"
+    params = [str(year)]
+    if search:
+        p = f'%{search}%'
+        query += " AND (description LIKE ? OR vendor LIKE ? OR invoice_number LIKE ? OR po_number LIKE ?)"
+        params.extend([p, p, p, p])
+    if vendor_f:
+        query += " AND vendor=?"
+        params.append(vendor_f)
+    if cat_f:
+        query += " AND category=?"
+        params.append(cat_f)
+    if status_f:
+        query += " AND payment_status=?"
+        params.append(status_f)
+    if date_from:
+        query += " AND date >= ?"
+        params.append(date_from)
+    if date_to:
+        query += " AND date <= ?"
+        params.append(date_to)
+    query += " ORDER BY date DESC"
+    invoices = db.execute(query, params).fetchall()
+
+    # All invoices for this year (for chart data, unfiltered)
+    all_year = db.execute(
+        "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date",
         (str(year),)
     ).fetchall()
 
@@ -593,8 +659,77 @@ def budget():
     for r in invoices:
         by_cat[r['category']] = by_cat.get(r['category'], 0) + r['amount']
 
-    return render_template('budget.html', invoices=invoices, year=year,
-                           year_list=year_list, total=total, by_cat=by_cat)
+    paid_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'paid')
+    pending_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'pending')
+    overdue_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'overdue')
+
+    # Monthly chart data (12 months of the year)
+    monthly = {}
+    for r in all_year:
+        if r['date']:
+            key = r['date'][:7]
+            monthly[key] = monthly.get(key, 0) + r['amount']
+    month_labels = [f"{year}-{m:02d}" for m in range(1, 13)]
+    month_data = [round(monthly.get(k, 0), 2) for k in month_labels]
+
+    # Vendor breakdown chart data
+    by_vendor = {}
+    for r in all_year:
+        v = r['vendor'] or 'Unknown'
+        by_vendor[v] = by_vendor.get(v, 0) + r['amount']
+    top_vendors = sorted(by_vendor.items(), key=lambda x: x[1], reverse=True)[:8]
+
+    # Category chart data (all year)
+    by_cat_all = {}
+    for r in all_year:
+        by_cat_all[r['category']] = by_cat_all.get(r['category'], 0) + r['amount']
+
+    # Vendor dropdown list
+    vendor_rows = db.execute(
+        "SELECT DISTINCT vendor FROM invoices WHERE vendor != '' AND vendor IS NOT NULL ORDER BY vendor"
+    ).fetchall()
+    vendors_list = [r['vendor'] for r in vendor_rows]
+
+    return render_template('budget.html',
+        invoices=invoices,
+        year=year,
+        year_list=year_list,
+        total=total,
+        by_cat=by_cat,
+        paid_total=paid_total,
+        pending_total=pending_total,
+        overdue_total=overdue_total,
+        month_labels=json.dumps(month_labels),
+        month_data=json.dumps(month_data),
+        top_vendors=json.dumps([[k, round(v, 2)] for k, v in top_vendors]),
+        by_cat_all=json.dumps([[k, round(v, 2)] for k, v in by_cat_all.items()]),
+        vendors_list=vendors_list,
+        search=search,
+        vendor_f=vendor_f,
+        cat_f=cat_f,
+        status_f=status_f,
+        date_from=date_from,
+        date_to=date_to,
+        github_docs=GITHUB_DOCS,
+        github_raw_base=GITHUB_RAW_BASE,
+    )
+
+
+def _export_invoices_csv(db, year):
+    invoices = db.execute(
+        "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date DESC",
+        (str(year),)
+    ).fetchall()
+    out = io.StringIO()
+    w = csv.writer(out)
+    w.writerow(['Date', 'Vendor', 'Description', 'Category', 'Amount (inc GST)', 'GST',
+                'PO Number', 'Invoice Number', 'Status', 'Notes'])
+    for r in invoices:
+        w.writerow([r['date'], r['vendor'], r['description'], r['category'],
+                    r['amount'], r['gst'] or '', r['po_number'] or '',
+                    r['invoice_number'] or '', r['payment_status'], r['notes'] or ''])
+    return Response(out.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': f'attachment; filename=invoices_{year}.csv'})
 
 
 @app.route('/budget/new', methods=['GET', 'POST'])
@@ -626,11 +761,34 @@ def invoice_delete(id):
     return redirect(url_for('budget'))
 
 
+@app.route('/budget/uploads/<filename>')
+def invoice_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+
 def _save_invoice(id):
     f = request.form
     db = g.db
     amount = f.get('amount') or 0
     gst_raw = f.get('gst') or None
+
+    # Handle file upload
+    file_path = None
+    if 'invoice_file' in request.files:
+        file = request.files['invoice_file']
+        if file and file.filename and allowed_file(file.filename):
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{ts}_{secure_filename(file.filename)}"
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            file_path = filename
+
+    # Keep existing file if not replacing
+    if id is not None and file_path is None:
+        existing = db.execute("SELECT file_path FROM invoices WHERE id=?", (id,)).fetchone()
+        if existing:
+            file_path = existing['file_path']
+
     vals = (
         f.get('date') or date.today().isoformat(),
         f.get('vendor', '').strip(),
@@ -642,15 +800,18 @@ def _save_invoice(id):
         f.get('invoice_number', '').strip(),
         f.get('payment_status', 'paid'),
         f.get('notes', '').strip(),
+        file_path,
     )
     if id is None:
         db.execute("""INSERT INTO invoices
-            (date,vendor,description,category,amount,gst,po_number,invoice_number,payment_status,notes)
-            VALUES (?,?,?,?,?,?,?,?,?,?)""", vals)
+            (date,vendor,description,category,amount,gst,po_number,invoice_number,
+             payment_status,notes,file_path)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)""", vals)
     else:
         db.execute("""UPDATE invoices SET
             date=?,vendor=?,description=?,category=?,amount=?,gst=?,
-            po_number=?,invoice_number=?,payment_status=?,notes=? WHERE id=?""", vals + (id,))
+            po_number=?,invoice_number=?,payment_status=?,notes=?,file_path=?
+            WHERE id=?""", vals + (id,))
     db.commit()
 
 
