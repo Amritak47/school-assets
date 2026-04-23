@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}{{ device['asset_tag'] or device['serial_number'] or 'Device' }}{% endblock %}
+{% block page_title %}{{ device['asset_tag'] or device['serial_number'] or device['device_type'] }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('devices') }}" class="btn btn-outline">← Devices</a>
+  <a href="{{ url_for('device_edit', id=device['id']) }}" class="btn btn-primary">Edit</a>
+  <a href="{{ url_for('maintenance_new') }}?device_id={{ device['id'] }}" class="btn btn-outline">+ Maintenance</a>
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+
+  <div class="detail-card">
+    <div class="detail-card-title">Identification</div>
+    <div class="detail-row"><span>Asset Tag</span><strong>{{ device['asset_tag'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Serial No.</span><strong class="mono">{{ device['serial_number'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Hostname</span><strong>{{ device['hostname'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Type</span><strong>{{ device['device_type'] }}</strong></div>
+    <div class="detail-row"><span>Make / Model</span><strong>{{ (device['make'] or '') + ' ' + (device['model'] or '') }}</strong></div>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-card-title">Assignment</div>
+    <div class="detail-row"><span>Assigned To</span><strong>{{ device['assigned_to'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Location</span><strong>{{ device['location'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Status</span>
+      {% if device['status'] == 'assigned' %}<span class="badge badge-blue">Assigned</span>
+      {% elif device['status'] == 'available' %}<span class="badge badge-green">Available</span>
+      {% elif device['status'] == 'maintenance' %}<span class="badge badge-orange">Maintenance</span>
+      {% else %}<span class="badge badge-gray">{{ device['status']|title }}</span>{% endif %}
+    </div>
+    <div class="detail-row"><span>Condition</span>
+      {% if device['condition'] in ['New','Excellent','Good'] %}<span class="badge badge-green">{{ device['condition'] }}</span>
+      {% elif device['condition'] == 'Fair' %}<span class="badge badge-orange">{{ device['condition'] }}</span>
+      {% else %}<span class="badge badge-red">{{ device['condition'] or '—' }}</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-card-title">Technical</div>
+    <div class="detail-row"><span>OS Version</span><strong>{{ device['os_version'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Last Reimaged</span><strong>{{ fmt_date(device['last_reimaged']) }}</strong></div>
+    <div class="detail-row"><span>Domain Joined</span>{% if device['domain_joined'] %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-gray">No</span>{% endif %}</div>
+    <div class="detail-row"><span>BitLocker</span>{% if device['bitlocker_enabled'] %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-gray">No</span>{% endif %}</div>
+    <div class="detail-row"><span>JAMF / MDM</span>{% if device['mdm_enrolled'] %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-gray">No</span>{% endif %}</div>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-card-title">Purchase & Warranty</div>
+    <div class="detail-row"><span>Purchased</span><strong>{{ fmt_date(device['purchase_date']) }}</strong></div>
+    <div class="detail-row"><span>Price</span><strong>{{ '$' + '{:,.0f}'.format(device['purchase_price']) if device['purchase_price'] else '—' }}</strong></div>
+    <div class="detail-row"><span>Supplier</span><strong>{{ device['supplier'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Funding</span><strong>{{ device['funding_source'] or '—' }}</strong></div>
+    <div class="detail-row"><span>Warranty</span>
+      {% if device['warranty_expiry'] %}
+        {% if is_expired(device['warranty_expiry']) %}<span class="badge badge-red">Expired {{ fmt_date(device['warranty_expiry']) }}</span>
+        {% elif is_expiring_soon(device['warranty_expiry'], WARRANTY_WARN_DAYS) %}<span class="badge badge-orange">{{ days_until(device['warranty_expiry']) }}d left</span>
+        {% else %}<span class="badge badge-green">Valid — {{ fmt_date(device['warranty_expiry']) }}</span>{% endif %}
+      {% else %}<span class="text-muted">—</span>{% endif %}
+    </div>
+    <div class="detail-row"><span>PO Number</span><strong>{{ device['po_number'] or '—' }}</strong></div>
+  </div>
+
+</div>
+
+{% if device['notes'] %}
+<div class="notes-block">
+  <strong>Notes:</strong> {{ device['notes'] }}
+</div>
+{% endif %}
+
+<!-- Maintenance history -->
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-head">
+    Maintenance History
+    <a href="{{ url_for('maintenance_new') }}?device_id={{ device['id'] }}" class="btn btn-sm btn-primary">+ Add Record</a>
+  </div>
+  {% if maintenance %}
+  <table class="table">
+    <thead><tr><th>Date</th><th>Type</th><th>Technician</th><th>Cost</th><th>Notes</th><th></th></tr></thead>
+    <tbody>
+      {% for m in maintenance %}
+      <tr>
+        <td>{{ fmt_date(m['date']) }}</td>
+        <td>{{ m['type'] or '—' }}</td>
+        <td>{{ m['technician'] or '—' }}</td>
+        <td>{{ '$' + '{:,.0f}'.format(m['cost']) if m['cost'] else '—' }}</td>
+        <td class="text-muted">{{ m['notes'] or '—' }}</td>
+        <td>
+          <form method="post" action="{{ url_for('maintenance_delete', id=m['id']) }}" onsubmit="return confirm('Delete?')">
+            <button class="btn-icon btn-icon-danger" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state-inline">No maintenance records yet.</div>
+  {% endif %}
+</div>
+
+<!-- Checkout history -->
+{% if checkouts %}
+<div class="card" style="margin-top:1rem">
+  <div class="card-head">Recent Check In/Out</div>
+  <table class="table">
+    <thead><tr><th>Borrowed By</th><th>Date Out</th><th>Returned</th><th>Notes</th></tr></thead>
+    <tbody>
+      {% for c in checkouts %}
+      <tr>
+        <td>{{ c['borrower_name'] or '—' }}</td>
+        <td>{{ fmt_date(c['checked_out_at']) }}</td>
+        <td>{% if c['returned_at'] %}<span class="badge badge-green">{{ fmt_date(c['returned_at']) }}</span>{% else %}<span class="badge badge-orange">Still Out</span>{% endif %}</td>
+        <td class="text-muted">{{ c['notes'] or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

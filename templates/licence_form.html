@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('licences') }}" class="btn btn-outline">← Back</a>{% endblock %}
+
+{% block content %}
+<form method="post" class="form-card">
+  <div class="form-section-title">Software Details</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Software Name *</label>
+      <input type="text" name="software" value="{{ licence['software'] if licence else '' }}" required placeholder="e.g. Microsoft Windows">
+    </div>
+    <div class="form-group">
+      <label>Vendor</label>
+      <select name="vendor">
+        <option value="">— Select —</option>
+        {% for v in VENDORS_LIST %}
+          <option value="{{ v }}" {% if licence and licence['vendor']==v %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Licence Type</label>
+      <select name="licence_type">
+        <option value="">— Select —</option>
+        {% for t in LICENCE_TYPES %}
+          <option value="{{ t }}" {% if licence and licence['licence_type']==t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select name="status">
+        {% for s in ['active','expired','pending'] %}
+          <option value="{{ s }}" {% if licence and licence['status']==s %}selected{% elif not licence and s=='active' %}selected{% endif %}>{{ s|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group full-width">
+      <label>Assigned To</label>
+      <input type="text" name="assigned_to" value="{{ licence['assigned_to'] if licence else '' }}" placeholder="e.g. All Windows Devices">
+    </div>
+  </div>
+
+  <div class="form-section-title">Costs</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Seats / Devices</label>
+      <input type="number" name="seats" value="{{ licence['seats'] if licence else '' }}" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label>Cost Per Unit (AUD)</label>
+      <input type="number" name="cost_per_unit" value="{{ licence['cost_per_unit'] if licence else '' }}" step="0.01" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Total Cost (AUD)</label>
+      <input type="number" name="total_cost" value="{{ licence['total_cost'] if licence else '' }}" step="0.01" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Billing Year</label>
+      <input type="number" name="billing_year" value="{{ licence['billing_year'] if licence else 2026 }}" placeholder="2026">
+    </div>
+    <div class="form-group">
+      <label>Renewal Date</label>
+      <input type="date" name="renewal_date" value="{{ licence['renewal_date'] if licence else '' }}">
+    </div>
+  </div>
+
+  <div class="form-section-title">Notes</div>
+  <div class="form-group full-width">
+    <label>Notes</label>
+    <textarea name="notes" rows="3">{{ licence['notes'] if licence else '' }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <a href="{{ url_for('licences') }}" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ 'Save Changes' if licence else 'Add Licence' }}</button>
+  </div>
+</form>
+{% endblock %}

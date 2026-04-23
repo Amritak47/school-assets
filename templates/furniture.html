@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Furniture{% endblock %}
+{% block page_title %}Furniture{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('furniture_new') }}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Item
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Summary -->
+<div class="sub-stats">
+  <div class="sub-stat">
+    <span class="sub-val">{{ total_items }}</span>
+    <span class="sub-label">Total Items</span>
+  </div>
+  <div class="sub-stat">
+    <span class="sub-val">{{ items|length }}</span>
+    <span class="sub-label">Records</span>
+  </div>
+  <div class="sub-stat">
+    <span class="sub-val">{{ fmt_currency(total_value) }}</span>
+    <span class="sub-label">Total Value</span>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card">
+  <form method="get" class="filters">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" value="{{ search }}" placeholder="Search furniture…" onchange="this.form.submit()">
+    </div>
+    <select name="cat" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for c in FURNITURE_CATEGORIES %}
+      <option value="{{ c }}" {% if cat == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All Statuses</option>
+      {% for s in FURNITURE_STATUSES %}
+      <option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|title }}</option>
+      {% endfor %}
+    </select>
+    {% if search or cat or status %}
+    <a href="{{ url_for('furniture') }}" class="btn btn-ghost btn-sm">Clear</a>
+    {% endif %}
+    <span class="rec-count">{{ items|length }} item{% if items|length != 1 %}s{% endif %}</span>
+  </form>
+
+  {% if not items %}
+  <div class="empty-state-inline">No furniture records. <a href="{{ url_for('furniture_new') }}" style="color:var(--blue)">Add one</a>.</div>
+  {% else %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Qty</th>
+        <th>Location</th>
+        <th>Condition</th>
+        <th>Purchase Date</th>
+        <th>Unit Price</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>
+          <strong>{{ item['name'] }}</strong>
+          {% if item['supplier'] %}<br><small class="text-muted">{{ item['supplier'] }}</small>{% endif %}
+        </td>
+        <td><span class="badge badge-gray">{{ item['category'] }}</span></td>
+        <td>{{ item['quantity'] }}</td>
+        <td>{{ item['location'] or '—' }}</td>
+        <td>
+          {% if item['condition'] == 'New' %}<span class="badge badge-blue">New</span>
+          {% elif item['condition'] == 'Good' %}<span class="badge badge-green">Good</span>
+          {% elif item['condition'] == 'Fair' %}<span class="badge badge-orange">Fair</span>
+          {% elif item['condition'] == 'Poor' %}<span class="badge badge-red">Poor</span>
+          {% else %}<span class="badge badge-gray">{{ item['condition'] }}</span>{% endif %}
+        </td>
+        <td class="mono">{{ fmt_date(item['purchase_date']) }}</td>
+        <td>{{ fmt_currency(item['purchase_price']) }}</td>
+        <td>
+          {% if item['status'] == 'active' %}<span class="badge badge-green">Active</span>
+          {% elif item['status'] == 'in storage' %}<span class="badge badge-gray">In Storage</span>
+          {% elif item['status'] == 'disposed' %}<span class="badge badge-red">Disposed</span>
+          {% else %}<span class="badge badge-orange">{{ item['status']|title }}</span>{% endif %}
+        </td>
+        <td class="action-cell">
+          <a href="{{ url_for('furniture_edit', id=item['id']) }}" class="btn-icon" title="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </a>
+          <form method="post" action="{{ url_for('furniture_delete', id=item['id']) }}" style="display:inline" onsubmit="return confirm('Delete this item?')">
+            <button class="btn-icon btn-icon-danger" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% if item['notes'] %}
+      <tr class="notes-row"><td colspan="9" class="note-cell">{{ item['notes'] }}</td></tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

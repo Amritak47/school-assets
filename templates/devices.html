@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Devices{% endblock %}
+{% block page_title %}Devices{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('device_new') }}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Device
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <!-- Filters -->
+  <form method="get" class="filters">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" value="{{ search }}" placeholder="Search asset tag, serial, user, model…" autocomplete="off">
+    </div>
+    <select name="type" onchange="this.form.submit()">
+      <option value="">All Types</option>
+      {% for t in DEVICE_TYPES %}
+        <option value="{{ t }}" {% if dtype == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All Statuses</option>
+      {% for s in STATUSES %}
+        <option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|title }}</option>
+      {% endfor %}
+    </select>
+    <select name="condition" onchange="this.form.submit()">
+      <option value="">All Conditions</option>
+      {% for c in CONDITIONS %}
+        <option value="{{ c }}" {% if condition == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline">Filter</button>
+    {% if search or dtype or status or condition %}
+      <a href="{{ url_for('devices') }}" class="btn btn-ghost">Clear</a>
+    {% endif %}
+    <span class="rec-count">{{ devices|length }} device{{ 's' if devices|length != 1 }}</span>
+    <a href="{{ url_for('export_devices') }}" class="btn btn-ghost btn-sm ml-auto" style="margin-left:auto">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </a>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Asset Tag / Serial</th>
+        <th>Type</th>
+        <th>Make / Model</th>
+        <th>Assigned To</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Condition</th>
+        <th>Warranty</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if not devices %}
+      <tr><td colspan="9" class="empty-cell">No devices found — <a href="{{ url_for('devices') }}">clear filters</a></td></tr>
+      {% endif %}
+      {% for d in devices %}
+      <tr>
+        <td>
+          <a href="{{ url_for('device_detail', id=d['id']) }}" class="device-link">
+            <strong>{{ d['asset_tag'] or d['serial_number'] or '—' }}</strong>
+          </a>
+          {% if d['hostname'] %}<br><small class="text-muted">{{ d['hostname'] }}</small>{% endif %}
+          {% if d['serial_number'] and d['asset_tag'] %}<br><small class="text-muted mono">{{ d['serial_number'] }}</small>{% endif %}
+        </td>
+        <td><span class="type-chip">{{ d['device_type'] }}</span></td>
+        <td>{{ (d['make'] or '') + ' ' + (d['model'] or '') }}<br><small class="text-muted mono">{{ d['serial_number'] if not d['asset_tag'] else '' }}</small></td>
+        <td>{{ d['assigned_to'] or '<span class="text-muted">—</span>'|safe }}</td>
+        <td>{{ d['location'] or '—' }}</td>
+        <td>
+          {% if d['status'] == 'assigned' %}<span class="badge badge-blue">Assigned</span>
+          {% elif d['status'] == 'available' %}<span class="badge badge-green">Available</span>
+          {% elif d['status'] == 'maintenance' %}<span class="badge badge-orange">Maintenance</span>
+          {% elif d['status'] == 'retired' %}<span class="badge badge-gray">Retired</span>
+          {% else %}<span class="badge badge-gray">{{ d['status'] }}</span>{% endif %}
+        </td>
+        <td>
+          {% if d['condition'] == 'New' or d['condition'] == 'Excellent' %}<span class="badge badge-green">{{ d['condition'] }}</span>
+          {% elif d['condition'] == 'Good' %}<span class="badge badge-teal">{{ d['condition'] }}</span>
+          {% elif d['condition'] == 'Fair' %}<span class="badge badge-orange">{{ d['condition'] }}</span>
+          {% elif d['condition'] == 'Poor' %}<span class="badge badge-red">{{ d['condition'] }}</span>
+          {% else %}<span class="badge badge-gray">{{ d['condition'] or '—' }}</span>{% endif %}
+        </td>
+        <td>
+          {% if d['warranty_expiry'] %}
+            {% if is_expired(d['warranty_expiry']) %}<span class="badge badge-red">Expired</span>
+            {% elif is_expiring_soon(d['warranty_expiry'], WARRANTY_WARN_DAYS) %}<span class="badge badge-orange">{{ days_until(d['warranty_expiry']) }}d</span>
+            {% else %}<span class="badge badge-green">{{ fmt_date(d['warranty_expiry']) }}</span>{% endif %}
+          {% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        <td class="action-cell">
+          <a href="{{ url_for('device_detail', id=d['id']) }}" class="btn-icon" title="View">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </a>
+          <a href="{{ url_for('device_edit', id=d['id']) }}" class="btn-icon" title="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </a>
+          <form method="post" action="{{ url_for('device_delete', id=d['id']) }}" style="display:inline" onsubmit="return confirm('Delete this device?')">
+            <button type="submit" class="btn-icon btn-icon-danger" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
