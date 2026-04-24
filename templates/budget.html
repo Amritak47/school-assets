@@ -4,165 +4,203 @@
 
 {% block topbar_actions %}
   <a href="{{ url_for('budget', year=year, export='csv') }}" class="btn btn-outline btn-sm">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Export CSV
   </a>
   <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add Invoice
   </a>
 {% endblock %}
 
 {% block content %}
 
-<!-- Year selector -->
-<div class="year-tabs">
+<!-- ── Year Tabs ─────────────────────────────────────────────────────────── -->
+<div class="b-year-tabs">
   {% for yr in year_list %}
   <a href="{{ url_for('budget', year=yr) }}"
-     class="year-tab {% if yr|int == year %}active{% endif %}">{{ yr }}</a>
+     class="b-year-tab {% if yr|int == year %}active{% endif %}">{{ yr }}</a>
   {% endfor %}
 </div>
 
-<!-- ── KPI cards ─────────────────────────────────────────────────────────── -->
-<div class="budget-summary">
-  <div class="stat-card">
-    <div class="stat-icon green">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    </div>
-    <div>
-      <div class="stat-value">{{ fmt_currency(total) }}</div>
-      <div class="stat-label">Total (filtered) {{ year }}</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon green">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    </div>
-    <div>
-      <div class="stat-value">{{ fmt_currency(paid_total) }}</div>
-      <div class="stat-label">Paid</div>
-    </div>
-  </div>
-  {% if pending_total > 0 %}
-  <div class="stat-card">
-    <div class="stat-icon orange">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    </div>
-    <div>
-      <div class="stat-value">{{ fmt_currency(pending_total) }}</div>
-      <div class="stat-label">Pending / Quotes</div>
-    </div>
-  </div>
-  {% endif %}
-  {% if overdue_total > 0 %}
-  <div class="stat-card card-alert">
-    <div class="stat-icon red">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </div>
-    <div>
-      <div class="stat-value">{{ fmt_currency(overdue_total) }}</div>
-      <div class="stat-label">Overdue</div>
-    </div>
-  </div>
-  {% endif %}
-  <div class="stat-card">
-    <div class="stat-icon teal">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    </div>
-    <div>
-      <div class="stat-value">{{ invoices|length }}</div>
-      <div class="stat-label">Invoices Shown</div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Budget target bar ──────────────────────────────────────────────────── -->
+<!-- ── Budget Target Hero ─────────────────────────────────────────────────── -->
 {% if budget_target %}
-{% set pct = [budget_pct, 100]|min %}
-<div class="card budget-target-card">
-  <div class="budget-target-row">
-    <div>
-      <span class="budget-target-label">{{ year }} Budget Target</span>
-      <span class="budget-target-amount">{{ fmt_currency(budget_target) }}</span>
-    </div>
-    <div class="budget-target-right">
-      <span class="budget-target-pct {% if budget_pct > 90 %}pct-danger{% elif budget_pct > 70 %}pct-warn{% else %}pct-ok{% endif %}">
-        {{ budget_pct }}% used
-      </span>
-      <span class="budget-target-remain">{{ fmt_currency(budget_target - paid_total) }} remaining</span>
+{% set pct_capped = [budget_pct, 100]|min %}
+{% set over = budget_pct > 100 %}
+<div class="b-hero {% if over %}b-hero-danger{% elif budget_pct > 70 %}b-hero-warn{% else %}b-hero-ok{% endif %}">
+  <div class="b-hero-left">
+    <div class="b-hero-label">{{ year }} Budget Target</div>
+    <div class="b-hero-target">{{ fmt_currency(budget_target) }}</div>
+    <div class="b-hero-meta">
+      <span class="b-hero-spent">{{ fmt_currency(paid_total) }} spent</span>
+      {% if over %}
+      <span class="b-hero-badge danger">⚠ {{ (budget_pct - 100)|round(1) }}% over budget</span>
+      {% else %}
+      <span class="b-hero-badge ok">{{ fmt_currency(budget_target - paid_total) }} remaining</span>
+      {% endif %}
     </div>
   </div>
-  <div class="budget-target-track">
-    <div class="budget-target-fill {% if budget_pct > 90 %}fill-danger{% elif budget_pct > 70 %}fill-warn{% else %}fill-ok{% endif %}"
-         style="width:{{ pct }}%"></div>
+
+  <div class="b-hero-center">
+    <div class="b-hero-track">
+      <div class="b-hero-fill" style="width:{{ pct_capped }}%"></div>
+      {% if not over %}
+      <div class="b-hero-marker" style="left:{{ pct_capped }}%">
+        <span class="b-hero-marker-label">{{ budget_pct }}%</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="b-hero-track-labels">
+      <span>$0</span>
+      <span>{{ fmt_currency(budget_target / 2) }}</span>
+      <span>{{ fmt_currency(budget_target) }}</span>
+    </div>
+    {% if over %}
+    <div class="b-hero-over-label">{{ budget_pct }}% of target used — ${{ '{:,.2f}'.format(paid_total - budget_target) }} over</div>
+    {% endif %}
+  </div>
+
+  <div class="b-hero-right">
+    <button class="b-hero-edit-btn"
+            onclick="document.getElementById('target-modal').style.display='flex'"
+            title="Edit budget target">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Target
+    </button>
   </div>
 </div>
 {% else %}
-<div class="budget-target-set-hint">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+<div class="b-no-target">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
   No budget target set for {{ year }}.
-  <button class="btn btn-sm btn-outline" onclick="document.getElementById('target-modal').style.display='flex'" style="margin-left:8px">Set Target</button>
+  <button class="btn btn-sm btn-primary" style="margin-left:10px"
+          onclick="document.getElementById('target-modal').style.display='flex'">
+    Set Budget Target
+  </button>
 </div>
 {% endif %}
 
-<!-- ── Charts row ─────────────────────────────────────────────────────────── -->
-<div class="budget-charts-row">
-  <div class="card budget-chart-card">
-    <div class="card-head">Monthly Spending — {{ year }}</div>
-    <div class="budget-chart-wrap"><canvas id="chart-monthly"></canvas></div>
+<!-- ── KPI Cards ──────────────────────────────────────────────────────────── -->
+<div class="b-kpi-row">
+  <div class="b-kpi-card b-kpi-green">
+    <div class="b-kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div class="b-kpi-body">
+      <div class="b-kpi-value">{{ fmt_currency(total) }}</div>
+      <div class="b-kpi-label">Total Spend {{ year }}</div>
+    </div>
   </div>
-  <div class="card budget-chart-card">
-    <div class="card-head">Spend by Category</div>
-    <div class="budget-chart-wrap"><canvas id="chart-category"></canvas></div>
+  <div class="b-kpi-card b-kpi-teal">
+    <div class="b-kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="b-kpi-body">
+      <div class="b-kpi-value">{{ fmt_currency(paid_total) }}</div>
+      <div class="b-kpi-label">Paid</div>
+    </div>
+  </div>
+  <div class="b-kpi-card b-kpi-amber">
+    <div class="b-kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="b-kpi-body">
+      <div class="b-kpi-value">{{ fmt_currency(pending_total) }}</div>
+      <div class="b-kpi-label">Pending / Quotes</div>
+    </div>
+  </div>
+  {% if overdue_total > 0 %}
+  <div class="b-kpi-card b-kpi-red">
+    <div class="b-kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="b-kpi-body">
+      <div class="b-kpi-value">{{ fmt_currency(overdue_total) }}</div>
+      <div class="b-kpi-label">Overdue</div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="b-kpi-card b-kpi-slate">
+    <div class="b-kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+    <div class="b-kpi-body">
+      <div class="b-kpi-value">{{ invoices|length }}</div>
+      <div class="b-kpi-label">Invoices Shown</div>
+    </div>
   </div>
 </div>
 
-<div class="budget-charts-row">
-  <div class="card budget-chart-card">
-    <div class="card-head">Spend by Vendor</div>
-    <div class="budget-chart-wrap"><canvas id="chart-vendors"></canvas></div>
+<!-- ── Charts ─────────────────────────────────────────────────────────────── -->
+<div class="b-charts-grid">
+  <div class="b-chart-card">
+    <div class="b-chart-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Monthly Spending — {{ year }}
+    </div>
+    <div class="b-chart-body"><canvas id="chart-monthly"></canvas></div>
   </div>
-  <div class="card budget-chart-card">
-    <div class="card-head">Spend by Location</div>
-    <div class="budget-chart-wrap"><canvas id="chart-location"></canvas></div>
+  <div class="b-chart-card">
+    <div class="b-chart-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+      Spend by Category
+    </div>
+    <div class="b-chart-body"><canvas id="chart-category"></canvas></div>
+  </div>
+  <div class="b-chart-card">
+    <div class="b-chart-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Spend by Vendor
+    </div>
+    <div class="b-chart-body"><canvas id="chart-vendors"></canvas></div>
+  </div>
+  <div class="b-chart-card">
+    <div class="b-chart-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Spend by Location
+    </div>
+    <div class="b-chart-body"><canvas id="chart-location"></canvas></div>
   </div>
 </div>
 
-<!-- ── Category progress bars (filtered) ─────────────────────────────────── -->
+<!-- ── Category breakdown ─────────────────────────────────────────────────── -->
 {% if by_cat %}
-<div class="card" style="margin-bottom:20px">
-  <div class="card-head">
+<div class="b-section-card">
+  <div class="b-section-head">
     Category Breakdown
     {% if search or vendor_f or cat_f or status_f or loc_f or date_from or date_to %}
-    <span class="badge badge-orange" style="font-size:10px">Filtered view</span>
+    <span class="badge badge-orange" style="font-size:10px;margin-left:6px">Filtered</span>
     {% endif %}
   </div>
-  <div style="padding:14px 18px">
+  <div class="b-cat-list">
     {% for cat, amt in by_cat.items()|sort(attribute='1', reverse=true) %}
     {% set pct = (amt / total * 100) if total else 0 %}
-    <div class="budget-cat-bar">
-      <span class="budget-cat-name">{{ cat }}</span>
-      <div class="budget-cat-wrap"><div class="budget-cat-fill" style="width:{{ pct|round(1) }}%"></div></div>
-      <span class="budget-cat-amt">{{ fmt_currency(amt) }}</span>
+    <div class="b-cat-row">
+      <span class="b-cat-name">{{ cat }}</span>
+      <div class="b-cat-track">
+        <div class="b-cat-fill" style="width:{{ pct|round(1) }}%"></div>
+      </div>
+      <span class="b-cat-amt">{{ fmt_currency(amt) }}</span>
+      <span class="b-cat-pct">{{ pct|round(0)|int }}%</span>
     </div>
     {% endfor %}
   </div>
 </div>
 {% endif %}
 
-<!-- ── Invoice table with filters ────────────────────────────────────────── -->
-<div class="card" style="margin-bottom:20px">
-  <div class="card-head">
+<!-- ── Invoice Table ──────────────────────────────────────────────────────── -->
+<div class="b-section-card">
+  <div class="b-section-head">
     Invoices — {{ year }}
-    <span class="badge badge-green">{{ invoices|length }}</span>
+    <span class="b-count-pill">{{ invoices|length }}</span>
   </div>
 
   <!-- Filter bar -->
-  <form method="get" action="{{ url_for('budget') }}" class="budget-filter-bar" id="filter-form">
+  <form method="get" action="{{ url_for('budget') }}" class="b-filter-bar" id="filter-form">
     <input type="hidden" name="year" value="{{ year }}">
-    <div class="search-box" style="flex:1;min-width:200px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" name="q" value="{{ search }}" placeholder="Search description, vendor, invoice #, PO #…">
+    <div class="b-search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" value="{{ search }}" placeholder="Search description, vendor, PO #…" autocomplete="off">
     </div>
     <select name="vendor" onchange="this.form.submit()">
       <option value="">All Vendors</option>
@@ -188,25 +226,26 @@
       <option value="{{ loc }}" {% if loc == loc_f %}selected{% endif %}>{{ loc }}</option>
       {% endfor %}
     </select>
-    <div class="budget-date-range">
-      <input type="date" name="date_from" value="{{ date_from }}" onchange="this.form.submit()" title="From">
-      <span style="color:var(--text-3);font-size:12px">–</span>
-      <input type="date" name="date_to" value="{{ date_to }}" onchange="this.form.submit()" title="To">
+    <div class="b-date-range">
+      <input type="date" name="date_from" value="{{ date_from }}" onchange="this.form.submit()" placeholder="From">
+      <span>–</span>
+      <input type="date" name="date_to"   value="{{ date_to }}"   onchange="this.form.submit()" placeholder="To">
     </div>
-    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    <button type="submit" class="btn btn-primary btn-sm">Search</button>
     {% if search or vendor_f or cat_f or status_f or loc_f or date_from or date_to %}
     <a href="{{ url_for('budget', year=year) }}" class="btn btn-ghost btn-sm">✕ Clear</a>
     {% endif %}
   </form>
 
   {% if not invoices %}
-  <div class="empty-state-inline">
-    No invoices match your filters for {{ year }}.
-    <a href="{{ url_for('invoice_new') }}" style="color:var(--primary)">Add one →</a>
+  <div class="b-empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32" style="color:var(--text-3)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <p>No invoices match your filters for {{ year }}.</p>
+    <a href="{{ url_for('invoice_new') }}" class="btn btn-primary btn-sm">Add Invoice</a>
   </div>
   {% else %}
   <div style="overflow-x:auto">
-    <table class="table" id="invoice-table">
+    <table class="table b-invoice-table">
       <thead>
         <tr>
           <th>Date</th>
@@ -216,44 +255,41 @@
           <th>Location</th>
           <th>Ref</th>
           <th>Status</th>
-          <th style="text-align:right">Amount (inc GST)</th>
+          <th style="text-align:right">Amount</th>
           <th>Doc</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         {% for inv in invoices %}
-        {% set age = (today() | string | replace('-','') | int) - (inv['date'] | replace('-','') | int) if inv['date'] else 0 %}
         <tr class="{% if inv['payment_status'] == 'overdue' %}row-warn{% endif %}">
-          <td class="mono" style="white-space:nowrap">{{ fmt_date(inv['date']) }}</td>
-          <td style="max-width:280px">
-            <strong style="display:block;line-height:1.3">{{ inv['description'][:80] }}{% if inv['description']|length > 80 %}…{% endif %}</strong>
-            {% if inv['po_number'] %}<small class="text-muted">PO: {{ inv['po_number'] }}</small>{% endif %}
+          <td class="mono b-date-cell">{{ fmt_date(inv['date']) }}</td>
+          <td class="b-desc-cell">
+            <strong>{{ inv['description'][:70] }}{% if inv['description']|length > 70 %}…{% endif %}</strong>
+            {% if inv['po_number'] %}<br><small class="text-muted">PO: {{ inv['po_number'] }}</small>{% endif %}
           </td>
           <td style="white-space:nowrap">{{ inv['vendor'] or '—' }}</td>
-          <td><span class="badge badge-gray" style="font-size:10px">{{ inv['category'] }}</span></td>
+          <td><span class="b-cat-chip">{{ inv['category'] }}</span></td>
           <td>
-            {% if inv['location'] %}
-            <span class="loc-chip">{{ inv['location'] }}</span>
+            {% if inv['location'] %}<span class="loc-chip">{{ inv['location'] }}</span>
             {% else %}<span class="text-muted">—</span>{% endif %}
           </td>
           <td class="mono text-muted" style="font-size:11px">{{ inv['invoice_number'] or '—' }}</td>
           <td>
-            {% if inv['payment_status'] == 'paid' %}<span class="badge badge-green">Paid</span>
-            {% elif inv['payment_status'] == 'pending' %}<span class="badge badge-orange">Pending</span>
-            {% elif inv['payment_status'] == 'overdue' %}<span class="badge badge-red">Overdue</span>
-            {% elif inv['payment_status'] == 'cancelled' %}<span class="badge badge-gray">Cancelled</span>
-            {% else %}<span class="badge badge-gray">{{ inv['payment_status']|title }}</span>
-            {% endif %}
+            {% if inv['payment_status'] == 'paid' %}<span class="b-status-pill paid">Paid</span>
+            {% elif inv['payment_status'] == 'pending' %}<span class="b-status-pill pending">Pending</span>
+            {% elif inv['payment_status'] == 'overdue' %}<span class="b-status-pill overdue">Overdue</span>
+            {% elif inv['payment_status'] == 'cancelled' %}<span class="b-status-pill cancelled">Cancelled</span>
+            {% else %}<span class="b-status-pill">{{ inv['payment_status']|title }}</span>{% endif %}
           </td>
-          <td style="text-align:right;font-weight:700;white-space:nowrap">{{ fmt_currency(inv['amount']) }}</td>
+          <td class="b-amount-cell">{{ fmt_currency(inv['amount']) }}</td>
           <td>
             {% if inv['file_path'] %}
-            <a href="{{ url_for('invoice_file', filename=inv['file_path']) }}" target="_blank" class="doc-pill" title="View document">
+            <a href="{{ url_for('invoice_file', filename=inv['file_path']) }}" target="_blank" class="doc-pill">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               PDF
             </a>
-            {% else %}<span style="color:var(--text-3);font-size:11px">—</span>{% endif %}
+            {% else %}<span class="text-muted" style="font-size:11px">—</span>{% endif %}
           </td>
           <td class="action-cell">
             <a href="{{ url_for('invoice_edit', id=inv['id']) }}" class="btn-icon" title="Edit">
@@ -273,9 +309,9 @@
         {% endfor %}
       </tbody>
       <tfoot>
-        <tr style="background:#F0FDF4;font-weight:700">
-          <td colspan="7" style="padding:10px 16px;font-size:13px;color:var(--primary)">Total (filtered)</td>
-          <td style="padding:10px 16px;text-align:right;font-size:15px;color:var(--primary)">{{ fmt_currency(total) }}</td>
+        <tr class="b-tfoot-total">
+          <td colspan="7">Total (filtered)</td>
+          <td class="b-amount-cell">{{ fmt_currency(total) }}</td>
           <td colspan="2"></td>
         </tr>
       </tfoot>
@@ -284,11 +320,12 @@
   {% endif %}
 </div>
 
-<!-- ── Set Budget Target modal ───────────────────────────────────────────── -->
-<div id="target-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+<!-- ── Set / Edit Budget Target Modal ───────────────────────────────────── -->
+<div id="target-modal" class="modal-overlay" style="display:none"
+     onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box">
     <div class="modal-head">
-      Set Budget Target — {{ year }}
+      <span>{% if budget_target %}Edit{% else %}Set{% endif %} Budget Target — {{ year }}</span>
       <button onclick="document.getElementById('target-modal').style.display='none'" class="btn-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -297,54 +334,69 @@
       <input type="hidden" name="year" value="{{ year }}">
       <div class="form-group">
         <label>Annual IT Budget (AUD inc GST)</label>
-        <input type="number" name="target" step="100" min="0" placeholder="e.g. 75000"
-               value="{{ budget_target or '' }}" required>
+        <input type="number" name="target" step="100" min="0"
+               placeholder="e.g. 75000" value="{{ budget_target or '' }}" required>
       </div>
       <div class="form-group">
         <label>Notes (optional)</label>
         <input type="text" name="notes" placeholder="e.g. NT Government IT allocation">
       </div>
       <div class="form-actions" style="margin-top:16px">
-        <button type="button" onclick="document.getElementById('target-modal').style.display='none'" class="btn btn-ghost">Cancel</button>
+        <button type="button" onclick="document.getElementById('target-modal').style.display='none'"
+                class="btn btn-ghost">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Target</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ── Chart.js ─────────────────────────────────────────────────────────── -->
+<!-- ── Charts JS ─────────────────────────────────────────────────────────── -->
 <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 <script>
 (function () {
-  const brandGreen  = '#1B5E20';
-  const limeGreen   = '#6CB33F';
-  const palette     = ['#1B5E20','#6CB33F','#2E7D32','#81C784','#388E3C','#A5D6A7',
-                       '#F59E0B','#EF4444','#8B5CF6','#06B6D4'];
-  const gridColor   = 'rgba(0,0,0,0.05)';
-  const textColor   = '#6B7280';
-  const fmt = v => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0));
-  const fmtFull = v => '$' + v.toLocaleString('en-AU', {minimumFractionDigits: 2});
+  const palette   = ['#1B5E20','#6CB33F','#2E7D32','#81C784','#388E3C','#A5D6A7',
+                     '#F59E0B','#EF4444','#8B5CF6','#06B6D4'];
+  const gridColor = 'rgba(0,0,0,0.04)';
+  const textColor = '#6B7280';
+  const fmt     = v => '$' + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0));
+  const fmtFull = v => '$' + v.toLocaleString('en-AU', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  const defTooltip = {
+    backgroundColor: '#1B5E20',
+    titleColor: '#fff',
+    bodyColor: '#fff',
+    padding: 10,
+    cornerRadius: 8,
+    displayColors: false
+  };
 
   // Monthly bar
   const monthRaw  = {{ month_labels }};
   const monthData = {{ month_data }};
-  const mLabels   = monthRaw.map(m => new Date(+m.slice(0,4), +m.slice(5)-1).toLocaleString('default',{month:'short'}));
+  const mLabels   = monthRaw.map(m =>
+    new Date(+m.slice(0,4), +m.slice(5)-1).toLocaleString('default', {month:'short'})
+  );
   new Chart(document.getElementById('chart-monthly'), {
     type: 'bar',
     data: {
       labels: mLabels,
       datasets: [{
         data: monthData,
-        backgroundColor: monthData.map(v => v > 0 ? 'rgba(27,94,32,0.75)' : 'rgba(27,94,32,0.15)'),
-        borderColor: brandGreen, borderWidth: 1, borderRadius: 4
+        backgroundColor: monthData.map(v => v > 0 ? '#1B5E20' : '#E8F5E9'),
+        borderColor:     monthData.map(v => v > 0 ? '#154818' : '#C8E6C9'),
+        borderWidth: 1,
+        borderRadius: 5,
+        borderSkipped: false
       }]
     },
     options: {
-      plugins: { legend: { display: false },
-                 tooltip: { callbacks: { label: c => ' ' + fmtFull(c.raw) } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { ...defTooltip, callbacks: { label: c => ' ' + fmtFull(c.raw) } }
+      },
       scales: {
-        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
-        y: { ticks: { color: textColor, callback: fmt }, grid: { color: gridColor } }
+        x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true }
       },
       responsive: true, maintainAspectRatio: false
     }
@@ -358,20 +410,23 @@
       data: {
         labels: catRaw.map(c => c[0]),
         datasets: [{ data: catRaw.map(c => c[1]), backgroundColor: palette,
-                     borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+                     borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }]
       },
       options: {
-        cutout: '62%',
+        cutout: '65%',
         plugins: {
-          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 10, boxWidth: 12 } },
-          tooltip: { callbacks: { label: c => ` ${c.label}: ${fmtFull(c.raw)}` } }
+          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 10 } },
+          tooltip: { ...defTooltip, callbacks: { label: c => ` ${c.label}: ${fmtFull(c.raw)}` } }
         },
         responsive: true, maintainAspectRatio: false
       }
     });
+  } else {
+    document.getElementById('chart-category').parentElement.innerHTML =
+      '<div class="b-chart-empty">No data for this period</div>';
   }
 
-  // Vendor horizontal bar
+  // Vendor bar (horizontal)
   const vRaw = {{ top_vendors }};
   if (vRaw.length) {
     new Chart(document.getElementById('chart-vendors'), {
@@ -379,19 +434,24 @@
       data: {
         labels: vRaw.map(v => v[0]),
         datasets: [{ data: vRaw.map(v => v[1]), backgroundColor: palette,
-                     borderWidth: 0, borderRadius: 4 }]
+                     borderWidth: 0, borderRadius: 5 }]
       },
       options: {
         indexAxis: 'y',
-        plugins: { legend: { display: false },
-                   tooltip: { callbacks: { label: c => ' ' + fmtFull(c.raw) } } },
+        plugins: {
+          legend: { display: false },
+          tooltip: { ...defTooltip, callbacks: { label: c => ' ' + fmtFull(c.raw) } }
+        },
         scales: {
-          x: { ticks: { color: textColor, callback: fmt }, grid: { color: gridColor } },
+          x: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true },
           y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
         },
         responsive: true, maintainAspectRatio: false
       }
     });
+  } else {
+    document.getElementById('chart-vendors').parentElement.innerHTML =
+      '<div class="b-chart-empty">No data for this period</div>';
   }
 
   // Location donut
@@ -402,17 +462,20 @@
       data: {
         labels: locRaw.map(l => l[0]),
         datasets: [{ data: locRaw.map(l => l[1]), backgroundColor: palette,
-                     borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+                     borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }]
       },
       options: {
-        cutout: '62%',
+        cutout: '65%',
         plugins: {
-          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 10, boxWidth: 12 } },
-          tooltip: { callbacks: { label: c => ` ${c.label}: ${fmtFull(c.raw)}` } }
+          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 10 } },
+          tooltip: { ...defTooltip, callbacks: { label: c => ` ${c.label}: ${fmtFull(c.raw)}` } }
         },
         responsive: true, maintainAspectRatio: false
       }
     });
+  } else {
+    document.getElementById('chart-location').parentElement.innerHTML =
+      '<div class="b-chart-empty">No data for this period</div>';
   }
 })();
 </script>
