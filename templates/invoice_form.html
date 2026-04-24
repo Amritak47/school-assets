@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block topbar_actions %}<a href="{{ url_for('budget') }}" class="btn btn-outline">← Back</a>{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('budget') }}" class="btn btn-outline">← Back to Budget</a>{% endblock %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data" class="form-card">
+<form method="post" enctype="multipart/form-data" class="form-card" style="max-width:960px">
+
   <div class="form-section-title">Invoice Details</div>
   <div class="form-grid">
     <div class="form-group">
@@ -13,11 +14,24 @@
     </div>
     <div class="form-group">
       <label>Vendor / Supplier</label>
-      <input type="text" name="vendor" value="{{ invoice['vendor'] if invoice else '' }}" placeholder="e.g. Dell Australia">
+      <input type="text" name="vendor" value="{{ invoice['vendor'] if invoice else '' }}"
+             placeholder="e.g. Territory Technology Solutions" list="vendor-list">
+      <datalist id="vendor-list">
+        <option value="Territory Technology Solutions">
+        <option value="Integral Digital">
+        <option value="Officeworks">
+        <option value="Amazon">
+        <option value="ASI Solutions">
+        <option value="Dell Australia">
+        <option value="Lenovo Australia">
+        <option value="Apple Australia">
+      </datalist>
     </div>
     <div class="form-group full-width">
       <label>Description *</label>
-      <input type="text" name="description" value="{{ invoice['description'] if invoice else '' }}" placeholder="What was purchased" required>
+      <input type="text" name="description"
+             value="{{ invoice['description'] if invoice else '' }}"
+             placeholder="What was purchased — be specific (e.g. 15× Dell Latitude 3140 student laptops)" required>
     </div>
     <div class="form-group">
       <label>Category</label>
@@ -31,7 +45,9 @@
       <label>Payment Status</label>
       <select name="payment_status">
         {% for s in PAYMENT_STATUSES %}
-        <option value="{{ s }}" {% if invoice and invoice['payment_status'] == s %}selected{% elif not invoice and s == 'paid' %}selected{% endif %}>{{ s|title }}</option>
+        <option value="{{ s }}"
+          {% if invoice and invoice['payment_status'] == s %}selected
+          {% elif not invoice and s == 'paid' %}selected{% endif %}>{{ s|title }}</option>
         {% endfor %}
       </select>
     </div>
@@ -43,68 +59,85 @@
     <div class="form-group">
       <label>GST Component (AUD)</label>
       <input type="number" name="gst" step="0.01" min="0"
-             value="{{ invoice['gst'] if invoice else '' }}" placeholder="0.00">
+             value="{{ invoice['gst'] if invoice else '' }}" placeholder="Auto-calculated if blank">
     </div>
     <div class="form-group">
-      <label>Invoice Number</label>
-      <input type="text" name="invoice_number" value="{{ invoice['invoice_number'] if invoice else '' }}" placeholder="Supplier invoice ref">
+      <label>Invoice / Order Number</label>
+      <input type="text" name="invoice_number"
+             value="{{ invoice['invoice_number'] if invoice else '' }}"
+             placeholder="Supplier reference number">
     </div>
     <div class="form-group">
       <label>PO Number</label>
-      <input type="text" name="po_number" value="{{ invoice['po_number'] if invoice else '' }}" placeholder="Purchase order number">
+      <input type="text" name="po_number"
+             value="{{ invoice['po_number'] if invoice else '' }}"
+             placeholder="e.g. PO15500143">
+    </div>
+    <div class="form-group">
+      <label>Location / Room</label>
+      <select name="location">
+        <option value="">— Select location —</option>
+        {% for loc in INVOICE_LOCATIONS %}
+        <option value="{{ loc }}"
+          {% if invoice and invoice['location'] == loc %}selected{% endif %}>{{ loc }}</option>
+        {% endfor %}
+      </select>
     </div>
     <div class="form-group full-width">
       <label>Notes</label>
-      <textarea name="notes" rows="3">{{ invoice['notes'] if invoice else '' }}</textarea>
+      <textarea name="notes" rows="3" placeholder="Any extra detail about this purchase…">{{ invoice['notes'] if invoice else '' }}</textarea>
     </div>
   </div>
 
   <div class="form-section-title">Attach Document</div>
-  <div class="form-grid">
-    <div class="form-group full-width">
-      {% if invoice and invoice['file_path'] %}
-      <div class="upload-current">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span>Current: <a href="{{ url_for('invoice_file', filename=invoice['file_path']) }}" target="_blank" style="color:var(--blue)">{{ invoice['file_path'].split('_', 2)[-1] if '_' in invoice['file_path'] else invoice['file_path'] }}</a></span>
-      </div>
-      <label style="margin-top:10px;font-size:12px;font-weight:600;color:var(--text-2)">Replace file (optional)</label>
-      {% else %}
-      <label>Upload invoice / PO / quote (PDF, Word, image — max 20 MB)</label>
-      {% endif %}
-      <div class="upload-drop-zone" id="upload-zone">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;color:var(--text-3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <p class="upload-hint">Drag &amp; drop a file here, or <label for="invoice_file" class="upload-browse">browse to upload</label></p>
-        <p class="upload-types">PDF, Word (.docx), images, Excel — max 20 MB</p>
-        <input type="file" name="invoice_file" id="invoice_file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.xlsx" style="display:none">
-        <div id="upload-filename" class="upload-filename" style="display:none"></div>
-      </div>
+  <div class="form-group full-width">
+    {% if invoice and invoice['file_path'] %}
+    <div class="upload-current">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span>Attached: <a href="{{ url_for('invoice_file', filename=invoice['file_path']) }}"
+            target="_blank" style="color:var(--primary)">
+        {{ invoice['file_path'].split('_', 2)[-1] if '_' in invoice['file_path'] else invoice['file_path'] }}
+      </a></span>
+    </div>
+    <p style="font-size:12px;color:var(--text-3);margin:6px 0 4px">Upload a new file to replace the existing one:</p>
+    {% endif %}
+    <div class="upload-drop-zone" id="upload-zone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;color:var(--text-3)">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <p class="upload-hint">Drag &amp; drop file here, or <label for="invoice_file" class="upload-browse">browse to upload</label></p>
+      <p class="upload-types">PDF, Word (.docx), Excel, Images — max 20 MB</p>
+      <input type="file" name="invoice_file" id="invoice_file"
+             accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.xlsx" style="display:none">
+      <div id="upload-filename" class="upload-filename" style="display:none"></div>
     </div>
   </div>
 
   <div class="form-actions">
     <a href="{{ url_for('budget') }}" class="btn btn-ghost">Cancel</a>
-    <button type="submit" class="btn btn-primary">{{ 'Update Invoice' if invoice else 'Save Invoice' }}</button>
+    <button type="submit" class="btn btn-primary">
+      {{ 'Update Invoice' if invoice else 'Save Invoice' }}
+    </button>
   </div>
 </form>
 
 <script>
 const zone = document.getElementById('upload-zone');
-const fileInput = document.getElementById('invoice_file');
+const inp  = document.getElementById('invoice_file');
 const nameEl = document.getElementById('upload-filename');
-
-function setFile(file) {
-  nameEl.textContent = '✓ ' + file.name;
+function setFile(f) {
+  nameEl.textContent = '✓ ' + f.name;
   nameEl.style.display = 'block';
   zone.classList.add('has-file');
 }
-fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+inp.addEventListener('change', () => { if (inp.files[0]) setFile(inp.files[0]); });
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
 zone.addEventListener('drop', e => {
-  e.preventDefault();
-  zone.classList.remove('drag-over');
+  e.preventDefault(); zone.classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
-  if (f) { fileInput.files = e.dataTransfer.files; setFile(f); }
+  if (f) { inp.files = e.dataTransfer.files; setFile(f); }
 });
 </script>
 {% endblock %}

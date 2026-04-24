@@ -38,6 +38,11 @@ ACCESSORY_TYPES = ['HDMI Cable','USB-C Cable','USB-A Cable','DisplayPort Cable',
 INVOICE_CATEGORIES = ['ICT Equipment','Software / Licences','Repairs & Maintenance',
                       'Accessories & Peripherals','Networking','Furniture','Other']
 PAYMENT_STATUSES = ['paid','pending','overdue','cancelled']
+INVOICE_LOCATIONS = ['ICT Room','Staff Room','Library','Front Office',
+                     "Principal's Office",'Business Manager Room','Corner Room',
+                     'Desert Rose','Student Support','Server Room',
+                     'Classroom 1','Classroom 2','Classroom 3','Classroom 4',
+                     'Classroom 5','Classroom 6','Classrooms (General)','Storage','Other']
 FURNITURE_CATEGORIES = ['Desk','Chair','Table','Cabinet','Shelving','Whiteboard',
                         'Bookcase','Storage','Display','Other']
 FURNITURE_STATUSES = ['active','in storage','disposed','on loan']
@@ -124,6 +129,7 @@ app.jinja_env.globals.update(
     ACCESSORY_TYPES=ACCESSORY_TYPES,
     INVOICE_CATEGORIES=INVOICE_CATEGORIES,
     PAYMENT_STATUSES=PAYMENT_STATUSES,
+    INVOICE_LOCATIONS=INVOICE_LOCATIONS,
     FURNITURE_CATEGORIES=FURNITURE_CATEGORIES,
     FURNITURE_STATUSES=FURNITURE_STATUSES,
 )
@@ -581,67 +587,45 @@ def export_backup_manual():
 
 # ─── Budget / Invoices ────────────────────────────────────────────────────────
 
-GITHUB_DOCS = [
-    {'name': 'Officeworks Invoice 624729245', 'file': 'Officeworks Invoice 624729245.pdf', 'type': 'Invoice', 'vendor': 'Officeworks'},
-    {'name': 'PO – Integral Digital 15500143', 'file': 'PO - Integral Digital 15500143.pdf', 'type': 'Purchase Order', 'vendor': 'Integral Digital'},
-    {'name': 'PO – Territory Technology Solutions 15500158', 'file': 'PO15500158  - Territory Technology Solutions.pdf', 'type': 'Purchase Order', 'vendor': 'Territory Technology Solutions'},
-    {'name': 'Purchase Order PO15500150', 'file': 'Purchase Order PO15500150.pdf', 'type': 'Purchase Order', 'vendor': ''},
-    {'name': 'Purchase Order PO15500151', 'file': 'Purchase Order PO15500151.pdf', 'type': 'Purchase Order', 'vendor': ''},
-    {'name': 'Purchase Order PO15500171', 'file': 'Purchase Order PO15500171.pdf', 'type': 'Purchase Order', 'vendor': ''},
-    {'name': 'Quote 10206414', 'file': 'Quote 10206414.pdf', 'type': 'Quote', 'vendor': ''},
-    {'name': 'Quote 64804v1', 'file': 'Quote_64804v1.pdf', 'type': 'Quote', 'vendor': ''},
-    {'name': 'Order Document', 'file': 'order-document.pdf', 'type': 'Order', 'vendor': ''},
-    {'name': 'Order Document (2)', 'file': 'order-document (1).pdf', 'type': 'Order', 'vendor': ''},
-    {'name': 'Purchase Order Request Form', 'file': 'Purchase Order Request Form.docx', 'type': 'Form', 'vendor': ''},
-    {'name': 'Monitor Spec Sheet', 'file': 'monitor.docx', 'type': 'Document', 'vendor': ''},
-]
-
-GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/Amritak47/school-assets/claude/device-inventory-tracker-TkvVj/'
-
-
 @app.route('/budget')
 def budget():
     db = g.db
     year = request.args.get('year', date.today().year, type=int)
 
-    # CSV export
     if request.args.get('export') == 'csv':
         return _export_invoices_csv(db, year)
 
-    # Filter params
-    search = request.args.get('q', '').strip()
+    search   = request.args.get('q', '').strip()
     vendor_f = request.args.get('vendor', '')
-    cat_f = request.args.get('cat', '')
+    cat_f    = request.args.get('cat', '')
     status_f = request.args.get('status', '')
+    loc_f    = request.args.get('location', '')
     date_from = request.args.get('date_from', '')
-    date_to = request.args.get('date_to', '')
+    date_to   = request.args.get('date_to', '')
 
-    # Filtered invoices
-    query = "SELECT * FROM invoices WHERE strftime('%Y', date)=?"
+    # Filtered invoice query
+    query  = "SELECT * FROM invoices WHERE strftime('%Y', date)=?"
     params = [str(year)]
     if search:
         p = f'%{search}%'
         query += " AND (description LIKE ? OR vendor LIKE ? OR invoice_number LIKE ? OR po_number LIKE ?)"
         params.extend([p, p, p, p])
     if vendor_f:
-        query += " AND vendor=?"
-        params.append(vendor_f)
+        query += " AND vendor=?";     params.append(vendor_f)
     if cat_f:
-        query += " AND category=?"
-        params.append(cat_f)
+        query += " AND category=?";   params.append(cat_f)
     if status_f:
-        query += " AND payment_status=?"
-        params.append(status_f)
+        query += " AND payment_status=?"; params.append(status_f)
+    if loc_f:
+        query += " AND location=?";   params.append(loc_f)
     if date_from:
-        query += " AND date >= ?"
-        params.append(date_from)
+        query += " AND date >= ?";    params.append(date_from)
     if date_to:
-        query += " AND date <= ?"
-        params.append(date_to)
+        query += " AND date <= ?";    params.append(date_to)
     query += " ORDER BY date DESC"
     invoices = db.execute(query, params).fetchall()
 
-    # All invoices for this year (for chart data, unfiltered)
+    # All invoices for the year (unfiltered — for charts)
     all_year = db.execute(
         "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date",
         (str(year),)
@@ -654,80 +638,108 @@ def budget():
     if str(year) not in year_list:
         year_list.insert(0, str(year))
 
-    total = sum(r['amount'] for r in invoices)
+    # Filtered totals
+    total         = sum(r['amount'] for r in invoices)
+    paid_total    = sum(r['amount'] for r in invoices if r['payment_status'] == 'paid')
+    pending_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'pending')
+    overdue_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'overdue')
     by_cat = {}
     for r in invoices:
         by_cat[r['category']] = by_cat.get(r['category'], 0) + r['amount']
 
-    paid_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'paid')
-    pending_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'pending')
-    overdue_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'overdue')
+    # Budget target for this year
+    tgt_row = db.execute("SELECT * FROM budget_targets WHERE year=?", (year,)).fetchone()
+    budget_target = tgt_row['target'] if tgt_row else None
+    budget_pct    = round(paid_total / budget_target * 100, 1) if budget_target else None
 
-    # Monthly chart data (12 months of the year)
+    # Monthly chart (all year, paid only for accurate spend)
     monthly = {}
     for r in all_year:
-        if r['date']:
-            key = r['date'][:7]
-            monthly[key] = monthly.get(key, 0) + r['amount']
+        if r['date'] and r['payment_status'] == 'paid':
+            k = r['date'][:7]
+            monthly[k] = monthly.get(k, 0) + r['amount']
     month_labels = [f"{year}-{m:02d}" for m in range(1, 13)]
-    month_data = [round(monthly.get(k, 0), 2) for k in month_labels]
+    month_data   = [round(monthly.get(k, 0), 2) for k in month_labels]
 
-    # Vendor breakdown chart data
+    # Vendor chart (all year)
     by_vendor = {}
     for r in all_year:
-        v = r['vendor'] or 'Unknown'
+        v = (r['vendor'] or 'Unknown').strip()
         by_vendor[v] = by_vendor.get(v, 0) + r['amount']
     top_vendors = sorted(by_vendor.items(), key=lambda x: x[1], reverse=True)[:8]
 
-    # Category chart data (all year)
+    # Category chart (all year)
     by_cat_all = {}
     for r in all_year:
         by_cat_all[r['category']] = by_cat_all.get(r['category'], 0) + r['amount']
 
-    # Vendor dropdown list
+    # Location chart (all year)
+    by_loc = {}
+    for r in all_year:
+        loc = (r['location'] or 'Unspecified').strip() or 'Unspecified'
+        by_loc[loc] = by_loc.get(loc, 0) + r['amount']
+    by_loc_sorted = sorted(by_loc.items(), key=lambda x: x[1], reverse=True)
+
+    # Dropdown helpers
     vendor_rows = db.execute(
         "SELECT DISTINCT vendor FROM invoices WHERE vendor != '' AND vendor IS NOT NULL ORDER BY vendor"
     ).fetchall()
     vendors_list = [r['vendor'] for r in vendor_rows]
 
+    loc_rows = db.execute(
+        "SELECT DISTINCT location FROM invoices WHERE location != '' AND location IS NOT NULL ORDER BY location"
+    ).fetchall()
+    locations_used = [r['location'] for r in loc_rows]
+
     return render_template('budget.html',
         invoices=invoices,
-        year=year,
-        year_list=year_list,
-        total=total,
+        year=year, year_list=year_list,
+        total=total, paid_total=paid_total,
+        pending_total=pending_total, overdue_total=overdue_total,
         by_cat=by_cat,
-        paid_total=paid_total,
-        pending_total=pending_total,
-        overdue_total=overdue_total,
+        budget_target=budget_target, budget_pct=budget_pct,
         month_labels=json.dumps(month_labels),
         month_data=json.dumps(month_data),
         top_vendors=json.dumps([[k, round(v, 2)] for k, v in top_vendors]),
         by_cat_all=json.dumps([[k, round(v, 2)] for k, v in by_cat_all.items()]),
-        vendors_list=vendors_list,
-        search=search,
-        vendor_f=vendor_f,
-        cat_f=cat_f,
-        status_f=status_f,
-        date_from=date_from,
-        date_to=date_to,
-        github_docs=GITHUB_DOCS,
-        github_raw_base=GITHUB_RAW_BASE,
+        by_loc=json.dumps([[k, round(v, 2)] for k, v in by_loc_sorted]),
+        vendors_list=vendors_list, locations_used=locations_used,
+        search=search, vendor_f=vendor_f, cat_f=cat_f,
+        status_f=status_f, loc_f=loc_f,
+        date_from=date_from, date_to=date_to,
     )
 
 
+@app.route('/budget/target', methods=['POST'])
+def budget_target_save():
+    year   = request.form.get('year', type=int)
+    target = request.form.get('target', type=float)
+    notes  = request.form.get('notes', '').strip()
+    if year and target is not None:
+        g.db.execute(
+            "INSERT INTO budget_targets (year, target, notes) VALUES (?,?,?) "
+            "ON CONFLICT(year) DO UPDATE SET target=excluded.target, notes=excluded.notes",
+            (year, target, notes)
+        )
+        g.db.commit()
+        flash(f'Budget target for {year} set to ${target:,.2f}.', 'success')
+    return redirect(url_for('budget', year=year))
+
+
 def _export_invoices_csv(db, year):
-    invoices = db.execute(
+    rows = db.execute(
         "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date DESC",
         (str(year),)
     ).fetchall()
     out = io.StringIO()
     w = csv.writer(out)
-    w.writerow(['Date', 'Vendor', 'Description', 'Category', 'Amount (inc GST)', 'GST',
-                'PO Number', 'Invoice Number', 'Status', 'Notes'])
-    for r in invoices:
+    w.writerow(['Date','Vendor','Description','Category','Amount (inc GST)','GST',
+                'PO Number','Invoice #','Status','Location','Notes'])
+    for r in rows:
         w.writerow([r['date'], r['vendor'], r['description'], r['category'],
                     r['amount'], r['gst'] or '', r['po_number'] or '',
-                    r['invoice_number'] or '', r['payment_status'], r['notes'] or ''])
+                    r['invoice_number'] or '', r['payment_status'],
+                    r['location'] or '', r['notes'] or ''])
     return Response(out.getvalue(), mimetype='text/csv',
                     headers={'Content-Disposition': f'attachment; filename=invoices_{year}.csv'})
 
@@ -767,23 +779,21 @@ def invoice_file(filename):
 
 
 def _save_invoice(id):
-    f = request.form
+    f  = request.form
     db = g.db
-    amount = f.get('amount') or 0
+    amount  = f.get('amount') or 0
     gst_raw = f.get('gst') or None
 
-    # Handle file upload
     file_path = None
     if 'invoice_file' in request.files:
         file = request.files['invoice_file']
         if file and file.filename and allowed_file(file.filename):
             os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            ts       = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"{ts}_{secure_filename(file.filename)}"
             file.save(os.path.join(UPLOAD_FOLDER, filename))
             file_path = filename
 
-    # Keep existing file if not replacing
     if id is not None and file_path is None:
         existing = db.execute("SELECT file_path FROM invoices WHERE id=?", (id,)).fetchone()
         if existing:
@@ -801,17 +811,18 @@ def _save_invoice(id):
         f.get('payment_status', 'paid'),
         f.get('notes', '').strip(),
         file_path,
+        f.get('location', '').strip(),
     )
     if id is None:
         db.execute("""INSERT INTO invoices
             (date,vendor,description,category,amount,gst,po_number,invoice_number,
-             payment_status,notes,file_path)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)""", vals)
+             payment_status,notes,file_path,location)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", vals)
     else:
         db.execute("""UPDATE invoices SET
             date=?,vendor=?,description=?,category=?,amount=?,gst=?,
-            po_number=?,invoice_number=?,payment_status=?,notes=?,file_path=?
-            WHERE id=?""", vals + (id,))
+            po_number=?,invoice_number=?,payment_status=?,notes=?,
+            file_path=?,location=? WHERE id=?""", vals + (id,))
     db.commit()
 
 
