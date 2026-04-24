@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, g, jsonify, Response, send_from_directory
-import sqlite3, csv, io, json, os, shutil, threading, time
+import sqlite3, csv, io, json, os, shutil, threading, time, re, subprocess
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
 from db import get_db, init_db, DB_PATH
@@ -9,11 +9,217 @@ app.secret_key = 'moil-primary-it-tracker-2026'
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB max upload
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'invoices')
+IMPORT_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'imports')
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'docx', 'doc', 'xlsx'}
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+DEVICE_FIELD_ALIASES = {
+    'asset_tag':       ['asset tag', 'asset_tag', 'assettag', 'asset', 'tag', 'asset no', 'asset number'],
+    'serial_number':   ['serial number', 'serial_number', 'serialnumber', 'serial', 's/n', 'sn', 'serial no'],
+    'device_type':     ['device type', 'device_type', 'type', 'category', 'device category'],
+    'make':            ['make', 'manufacturer', 'brand', 'mfr'],
+    'model':           ['model', 'model number', 'model_number', 'model name'],
+    'assigned_to':     ['assigned to', 'assigned_to', 'user', 'owner', 'assignee', 'student', 'staff', 'name'],
+    'location':        ['location', 'room', 'area', 'site', 'place'],
+    'status':          ['status', 'state', 'device status'],
+    'condition':       ['condition', 'device condition', 'physical condition'],
+    'os_version':      ['os', 'operating system', 'os version', 'os_version', 'platform'],
+    'hostname':        ['hostname', 'host name', 'computer name', 'computername', 'machine name'],
+    'purchase_date':   ['purchase date', 'purchase_date', 'bought', 'date purchased', 'date bought', 'buy date'],
+    'purchase_price':  ['purchase price', 'purchase_price', 'price', 'cost', 'amount', 'value'],
+    'warranty_expiry': ['warranty expiry', 'warranty_expiry', 'warranty', 'warranty end', 'warranty expires', 'warranty date'],
+    'funding_source':  ['funding', 'funding source', 'funding_source', 'funded by'],
+    'supplier':        ['supplier', 'vendor', 'purchased from', 'retailer'],
+    'po_number':       ['po number', 'po_number', 'po', 'purchase order', 'order number'],
+    'notes':           ['notes', 'note', 'comments', 'remarks', 'comment'],
+}
+DEVICE_IMPORT_FIELDS = list(DEVICE_FIELD_ALIASES.keys())
+
+
+def _auto_map_columns(headers):
+    mapping = {}
+    for header in headers:
+        h = header.lower().strip()
+        for field, aliases in DEVICE_FIELD_ALIASES.items():
+            if h in aliases:
+                mapping[header] = field
+                break
+        else:
+            mapping[header] = ''
+    return mapping
+
+
+def _parse_import_file(filepath):
+    ext = filepath.rsplit('.', 1)[-1].lower()
+    try:
+        if ext in ('xlsx', 'xls'):
+            import openpyxl
+            wb = openpyxl.load_workbook(filepath, read_only=True, data_only=True)
+            ws = wb.active
+            all_rows = list(ws.iter_rows(values_only=True))
+            wb.close()
+        elif ext == 'csv':
+            import csv as _csv
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                all_rows = list(_csv.reader(f))
+        else:
+            return [], [], {}, ['Unsupported format. Upload .xlsx or .csv']
+    except Exception as e:
+        return [], [], {}, [f'Could not read file: {e}']
+
+    if not all_rows:
+        return [], [], {}, ['File is empty']
+
+    headers = [str(h).strip() if h is not None else f'Col{i+1}' for i, h in enumerate(all_rows[0])]
+    data_rows = [[str(c).strip() if c is not None else '' for c in row] for row in all_rows[1:]]
+    mapping = _auto_map_columns(headers)
+    return data_rows, headers, mapping, []
+
+
+def _extract_invoice_from_pdf(filepath):
+    try:
+        result = subprocess.run(['pdftotext', filepath, '-'],
+                                capture_output=True, text=True, timeout=30)
+        text = result.stdout
+    except Exception:
+        return {}
+
+    data = {}
+
+    for pattern in [
+        r'Total\s+(?:inc(?:luding)?\s+GST)?\s*\$?\s*([\d,]+\.\d{2})',
+        r'(?:Grand\s+)?Total\s*:\s*\$?\s*([\d,]+\.\d{2})',
+        r'(?:Invoice\s+)?Amount\s*(?:Due)?\s*:\s*\$?\s*([\d,]+\.\d{2})',
+        r'TOTAL\s+\$?\s*([\d,]+\.\d{2})',
+        r'\$\s*([\d,]+\.\d{2})\s*(?:inc\s+GST|AUD)',
+    ]:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            data['amount'] = m.group(1).replace(',', '')
+            break
+
+    for pattern in [
+        r'GST\s*(?:10%)?\s*:?\s*\$?\s*([\d,]+\.\d{2})',
+        r'G\.?S\.?T\.?\s*:?\s*\$?\s*([\d,]+\.\d{2})',
+    ]:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            data['gst'] = m.group(1).replace(',', '')
+            break
+
+    date_tries = [
+        (r'\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\b', '%d %B %Y'),
+        (r'\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b', '%d %b %Y'),
+        (r'\b(\d{4})-(\d{2})-(\d{2})\b', '%Y-%m-%d'),
+    ]
+    for pattern, fmt in date_tries:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            try:
+                d = datetime.strptime(m.group(0), fmt)
+                data['date'] = d.strftime('%Y-%m-%d')
+                break
+            except Exception:
+                pass
+    if 'date' not in data:
+        m = re.search(r'\b(\d{1,2})/(\d{1,2})/(\d{4})\b', text)
+        if m:
+            try:
+                d = datetime.strptime(m.group(0), '%d/%m/%Y')
+                data['date'] = d.strftime('%Y-%m-%d')
+            except Exception:
+                pass
+
+    for pattern in [
+        r'Invoice\s+(?:No\.?|Number|#)\s*:?\s*([A-Z0-9][-A-Z0-9/]{1,30})',
+        r'INV[-#]?\s*([A-Z0-9][-A-Z0-9]{1,20})',
+    ]:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            data['invoice_number'] = m.group(1).strip()
+            break
+
+    for pattern in [
+        r'(?:PO|Purchase\s+Order)\s+(?:No\.?|Number|#)?\s*:?\s*([A-Z0-9][-A-Z0-9]{3,20})',
+        r'P\.?O\.?\s+(?:No\.?|#)?\s*:?\s*([A-Z0-9][-A-Z0-9]{3,20})',
+    ]:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            data['po_number'] = m.group(1).strip()
+            break
+
+    for pattern in [
+        r'(?:From|Supplier|Vendor|Sold\s+By|Bill\s+To)\s*:?\s*([^\n]{4,80})',
+        r'^([A-Z][A-Za-z\s&.,()-]{3,60}(?:Pty\.?\s*Ltd\.?|Solutions|Services|Technologies|Digital|Australia))',
+    ]:
+        m = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+        if m:
+            v = m.group(1).strip()
+            if len(v) > 3:
+                data['vendor'] = v[:100]
+                break
+
+    for pattern in [
+        r'(?:Description|Item|Product|For|Re)\s*:?\s*([^\n]{5,200})',
+    ]:
+        m = re.search(pattern, text, re.IGNORECASE)
+        if m:
+            desc = m.group(1).strip()
+            if len(desc) > 4:
+                data['description'] = desc[:200]
+                break
+
+    tl = text.lower()
+    if any(w in tl for w in ['laptop', 'computer', 'pc', 'monitor', 'ipad', 'tablet', 'server', 'printer', 'chromebook']):
+        data['category'] = 'ICT Equipment'
+    elif any(w in tl for w in ['software', 'licence', 'license', 'subscription', 'microsoft 365', 'adobe']):
+        data['category'] = 'Software / Licences'
+    elif any(w in tl for w in ['repair', 'maintenance', 'service call', 'technical support']):
+        data['category'] = 'Repairs & Maintenance'
+    elif any(w in tl for w in ['cable', 'mouse', 'keyboard', 'headset', 'peripheral', 'case', 'hdmi', 'adapter', 'charger']):
+        data['category'] = 'Accessories & Peripherals'
+    elif any(w in tl for w in ['switch', 'router', 'network', 'wifi', 'ethernet', 'access point', 'firewall']):
+        data['category'] = 'Networking'
+    elif any(w in tl for w in ['desk', 'chair', 'table', 'furniture']):
+        data['category'] = 'Furniture'
+    else:
+        data['category'] = 'ICT Equipment'
+
+    return data
+
+
+def _import_clean_float(v):
+    try:
+        return float(str(v).replace('$', '').replace(',', '').strip())
+    except Exception:
+        return None
+
+
+def _import_clean_date(v):
+    if not v:
+        return None
+    for fmt in ('%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d', '%d-%m-%Y', '%d %b %Y', '%d %B %Y'):
+        try:
+            return datetime.strptime(str(v).strip(), fmt).strftime('%Y-%m-%d')
+        except Exception:
+            pass
+    return None
+
+
+def _import_clean_status(v):
+    v = str(v).lower().strip()
+    return v if v in STATUSES else 'available'
+
+
+def _import_clean_condition(v):
+    for c in CONDITIONS:
+        if c.lower() == str(v).lower().strip():
+            return c
+    return 'Good'
 
 DEVICE_TYPES = ['Student Laptop','Staff Laptop','Teacher Laptop','Desktop PC',
                 'New PC Lab PC','Monitor','iPad','Other']
@@ -256,6 +462,154 @@ def device_delete(id):
     g.db.commit()
     flash('Device deleted.', 'info')
     return redirect(url_for('devices'))
+
+
+@app.route('/devices/import', methods=['GET', 'POST'])
+def device_import():
+    if request.method == 'GET':
+        return render_template('device_import.html', step='upload')
+
+    action = request.form.get('action', 'preview')
+
+    if action == 'preview':
+        if 'import_file' not in request.files:
+            flash('No file selected.', 'error')
+            return render_template('device_import.html', step='upload')
+        f = request.files['import_file']
+        if not f or not f.filename:
+            flash('No file selected.', 'error')
+            return render_template('device_import.html', step='upload')
+        ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
+        if ext not in ('xlsx', 'xls', 'csv'):
+            flash('Please upload an Excel (.xlsx) or CSV (.csv) file.', 'error')
+            return render_template('device_import.html', step='upload')
+
+        os.makedirs(IMPORT_FOLDER, exist_ok=True)
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{ts}_{secure_filename(f.filename)}"
+        filepath = os.path.join(IMPORT_FOLDER, filename)
+        f.save(filepath)
+
+        rows, headers, mapping, errors = _parse_import_file(filepath)
+        if errors:
+            flash(errors[0], 'error')
+            return render_template('device_import.html', step='upload')
+
+        return render_template('device_import.html',
+            step='preview',
+            headers=headers,
+            preview=rows[:10],
+            mapping=mapping,
+            total_rows=len(rows),
+            import_filename=filename,
+            device_import_fields=DEVICE_IMPORT_FIELDS,
+        )
+
+    elif action == 'import':
+        filename = request.form.get('import_filename', '').strip()
+        if not filename or '/' in filename or '..' in filename:
+            flash('Invalid import file reference.', 'error')
+            return redirect(url_for('device_import'))
+
+        filepath = os.path.join(IMPORT_FOLDER, filename)
+        if not os.path.exists(filepath):
+            flash('Import file not found — please re-upload.', 'error')
+            return redirect(url_for('device_import'))
+
+        rows, headers, _, errors = _parse_import_file(filepath)
+        if errors:
+            flash(errors[0], 'error')
+            return redirect(url_for('device_import'))
+
+        col_map = {}
+        for i in range(len(headers)):
+            field = request.form.get(f'map_{i}', '').strip()
+            if field:
+                col_map[i] = field
+
+        db = g.db
+        imported = 0
+        skipped = 0
+        now = datetime.now().isoformat()
+
+        for row in rows:
+            device = {}
+            for col_idx, field_name in col_map.items():
+                if col_idx < len(row):
+                    val = row[col_idx].strip()
+                    if val:
+                        device[field_name] = val
+
+            if not device:
+                skipped += 1
+                continue
+
+            asset_tag = device.get('asset_tag', '').strip()
+            serial_number = device.get('serial_number', '').strip()
+
+            if asset_tag and db.execute("SELECT 1 FROM devices WHERE asset_tag=?", (asset_tag,)).fetchone():
+                skipped += 1
+                continue
+            if serial_number and not asset_tag and db.execute("SELECT 1 FROM devices WHERE serial_number=?", (serial_number,)).fetchone():
+                skipped += 1
+                continue
+
+            db.execute("""INSERT INTO devices
+                (asset_tag,serial_number,device_type,make,model,assigned_to,location,
+                 status,condition,os_version,hostname,purchase_date,purchase_price,
+                 warranty_expiry,funding_source,supplier,po_number,notes,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                asset_tag or None,
+                serial_number or None,
+                device.get('device_type', 'Other').strip() or 'Other',
+                device.get('make', '').strip(),
+                device.get('model', '').strip(),
+                device.get('assigned_to', '').strip(),
+                device.get('location', '').strip(),
+                _import_clean_status(device.get('status', 'available')),
+                _import_clean_condition(device.get('condition', 'Good')),
+                device.get('os_version', '').strip(),
+                device.get('hostname', '').strip(),
+                _import_clean_date(device.get('purchase_date', '')),
+                _import_clean_float(device.get('purchase_price', '')),
+                _import_clean_date(device.get('warranty_expiry', '')),
+                device.get('funding_source', '').strip(),
+                device.get('supplier', '').strip(),
+                device.get('po_number', '').strip(),
+                device.get('notes', '').strip(),
+                now,
+            ))
+            imported += 1
+
+        db.commit()
+        flash(f'Import complete: {imported} device{"s" if imported != 1 else ""} added, {skipped} skipped (duplicates or empty rows).', 'success')
+        return redirect(url_for('devices'))
+
+    return redirect(url_for('device_import'))
+
+
+@app.route('/devices/import/template')
+def device_import_template():
+    import openpyxl
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Device Import'
+    headers = ['Asset Tag', 'Serial Number', 'Device Type', 'Make', 'Model',
+               'Assigned To', 'Location', 'Status', 'Condition', 'OS Version',
+               'Hostname', 'Purchase Date', 'Purchase Price', 'Warranty Expiry',
+               'Funding Source', 'Supplier', 'PO Number', 'Notes']
+    example = ['MPS-001', 'SN12345678', 'Student Laptop', 'Dell', 'Latitude 3140',
+               'Student Name', 'ICT Room', 'assigned', 'Good', 'Windows 11',
+               'LAPTOP-01', '15/01/2024', '1200.00', '15/01/2027',
+               'NT Government', 'Territory Technology Solutions', 'PO15500143', '']
+    ws.append(headers)
+    ws.append(example)
+    out = io.BytesIO()
+    wb.save(out)
+    out.seek(0)
+    return Response(out.getvalue(),
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': 'attachment; filename=device_import_template.xlsx'})
 
 
 def _save_device(id):
@@ -726,6 +1080,30 @@ def budget_target_save():
     return redirect(url_for('budget', year=year))
 
 
+@app.route('/budget/extract-pdf', methods=['POST'])
+def invoice_extract_pdf():
+    if 'invoice_file' not in request.files:
+        return jsonify({'error': 'No file'}), 400
+    file = request.files['invoice_file']
+    if not file or not file.filename:
+        return jsonify({'error': 'No file selected'}), 400
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({'error': 'File type not allowed'}), 400
+
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"{ts}_{secure_filename(file.filename)}"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
+
+    data = {}
+    if ext == 'pdf':
+        data = _extract_invoice_from_pdf(filepath)
+    data['file_path'] = filename
+    return jsonify(data)
+
+
 def _export_invoices_csv(db, year):
     rows = db.execute(
         "SELECT * FROM invoices WHERE strftime('%Y', date)=? ORDER BY date DESC",
@@ -798,6 +1176,11 @@ def _save_invoice(id):
         existing = db.execute("SELECT file_path FROM invoices WHERE id=?", (id,)).fetchone()
         if existing:
             file_path = existing['file_path']
+
+    if file_path is None:
+        extracted = f.get('extracted_file_path', '').strip()
+        if extracted:
+            file_path = extracted
 
     vals = (
         f.get('date') or date.today().isoformat(),

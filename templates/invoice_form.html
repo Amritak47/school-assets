@@ -4,6 +4,28 @@
 {% block topbar_actions %}<a href="{{ url_for('budget') }}" class="btn btn-outline">← Back to Budget</a>{% endblock %}
 
 {% block content %}
+
+<!-- Smart Extract Banner -->
+<div class="smart-extract-banner">
+  <div class="smart-extract-inner" id="smart-extract-drop">
+    <div class="smart-extract-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    </div>
+    <div class="smart-extract-text">
+      <strong>Smart Extract</strong>
+      <span>Drop a PDF invoice here to auto-fill the form fields below</span>
+    </div>
+    <label for="extract-input" class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Browse PDF
+    </label>
+    <input type="file" id="extract-input" accept=".pdf" style="display:none">
+  </div>
+  <div class="smart-extract-status" id="extract-status" style="display:none"></div>
+</div>
+
 <form method="post" enctype="multipart/form-data" class="form-card" style="max-width:960px">
 
   <div class="form-section-title">Invoice Details</div>
@@ -123,8 +145,9 @@
 </form>
 
 <script>
-const zone = document.getElementById('upload-zone');
-const inp  = document.getElementById('invoice_file');
+// Standard upload zone
+const zone   = document.getElementById('upload-zone');
+const inp    = document.getElementById('invoice_file');
 const nameEl = document.getElementById('upload-filename');
 function setFile(f) {
   nameEl.textContent = '✓ ' + f.name;
@@ -138,6 +161,77 @@ zone.addEventListener('drop', e => {
   e.preventDefault(); zone.classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
   if (f) { inp.files = e.dataTransfer.files; setFile(f); }
+});
+
+// Smart Extract
+const extractInput  = document.getElementById('extract-input');
+const extractDrop   = document.getElementById('smart-extract-drop');
+const extractStatus = document.getElementById('extract-status');
+
+function autoExtract(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'pdf') {
+    extractStatus.style.display = 'block';
+    extractStatus.innerHTML = '<span class="extract-warn">⚠ Smart Extract only works with PDF files.</span>';
+    return;
+  }
+  extractStatus.style.display = 'block';
+  extractStatus.innerHTML = '<span class="extract-loading"><span class="extract-spinner"></span> Extracting data from PDF…</span>';
+
+  const fd = new FormData();
+  fd.append('invoice_file', file);
+  fetch('/budget/extract-pdf', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      const filled = [];
+      const set = (name, val, label) => {
+        if (!val) return;
+        const el = document.querySelector(`[name="${name}"]`);
+        if (el) { el.value = val; filled.push(label); }
+      };
+      set('date',           data.date,           'Date');
+      set('vendor',         data.vendor,         'Vendor');
+      set('description',    data.description,    'Description');
+      set('amount',         data.amount,         'Amount');
+      set('gst',            data.gst,            'GST');
+      set('invoice_number', data.invoice_number, 'Invoice #');
+      set('po_number',      data.po_number,      'PO #');
+      if (data.category) {
+        const sel = document.querySelector('[name="category"]');
+        for (let opt of sel.options) {
+          if (opt.value === data.category) { sel.value = data.category; filled.push('Category'); break; }
+        }
+      }
+      if (data.file_path) {
+        let hid = document.getElementById('extracted_file_path');
+        if (!hid) {
+          hid = document.createElement('input');
+          hid.type = 'hidden'; hid.name = 'extracted_file_path'; hid.id = 'extracted_file_path';
+          document.querySelector('form').appendChild(hid);
+        }
+        hid.value = data.file_path;
+        nameEl.textContent = '✓ ' + file.name + ' (auto-attached)';
+        nameEl.style.display = 'block';
+        zone.classList.add('has-file');
+      }
+      if (filled.length > 0) {
+        extractStatus.innerHTML = `<span class="extract-success">✓ Auto-filled: ${filled.join(', ')} — review and adjust if needed</span>`;
+      } else {
+        extractStatus.innerHTML = '<span class="extract-warn">⚠ Could not extract data automatically — please fill in manually</span>';
+      }
+    })
+    .catch(() => {
+      extractStatus.innerHTML = '<span class="extract-error">✕ Extraction failed — please fill in manually</span>';
+    });
+}
+
+extractInput.addEventListener('change', () => { if (extractInput.files[0]) autoExtract(extractInput.files[0]); });
+extractDrop.addEventListener('dragover', e => { e.preventDefault(); extractDrop.classList.add('drag-over'); });
+extractDrop.addEventListener('dragleave', () => extractDrop.classList.remove('drag-over'));
+extractDrop.addEventListener('drop', e => {
+  e.preventDefault(); extractDrop.classList.remove('drag-over');
+  autoExtract(e.dataTransfer.files[0]);
 });
 </script>
 {% endblock %}

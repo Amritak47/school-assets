@@ -650,3 +650,190 @@ small { font-size: 11px; }
 .search-box input:focus { outline: none; }
 .budget-filter-bar select:focus,
 .budget-date-range input[type=date]:focus { border-color: var(--primary); }
+
+/* ── Smart Extract Banner ── */
+.smart-extract-banner {
+  max-width: 960px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--r-lg);
+  background: var(--accent-light);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: border-color .2s, background .2s;
+}
+.smart-extract-banner.drag-over,
+#smart-extract-drop.drag-over {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.smart-extract-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  cursor: default;
+}
+.smart-extract-icon {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.smart-extract-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.smart-extract-text strong { font-size: 14px; color: var(--primary); }
+.smart-extract-text span   { font-size: 12px; color: var(--text-2); }
+.smart-extract-status {
+  padding: 8px 18px 10px;
+  font-size: 13px;
+  border-top: 1px solid rgba(108,179,63,0.2);
+}
+.extract-loading { display: flex; align-items: center; gap: 8px; color: var(--text-2); }
+.extract-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.extract-success { color: #1B5E20; font-weight: 500; }
+.extract-warn    { color: #B45309; }
+.extract-error   { color: var(--danger); }
+
+/* ── Device Import Steps ── */
+.import-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 24px;
+}
+.import-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+.import-step span {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.import-step.active {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+.import-step.active span {
+  background: var(--primary);
+  color: #fff;
+}
+.import-step.done { color: var(--accent); }
+.import-step.done span {
+  background: var(--accent);
+  color: #fff;
+}
+.import-step-arrow {
+  color: var(--text-3);
+  font-size: 18px;
+  padding: 0 4px;
+  user-select: none;
+}
+
+/* ── Import Tips ── */
+.import-tips {
+  background: var(--gray-light);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  min-width: 240px;
+  max-width: 340px;
+  flex: 0 0 auto;
+}
+.import-tip-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.import-tip-list {
+  margin: 0;
+  padding-left: 16px;
+  list-style: disc;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+.import-tip-list code {
+  background: var(--border);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 11px;
+}
+
+/* ── Import Column Mapping ── */
+.import-mapping-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0;
+}
+.import-mapping-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.import-mapping-row:last-child { border-bottom: none; }
+.import-col-name {
+  flex: 0 0 160px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.import-col-arrow {
+  color: var(--text-3);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.import-map-select {
+  flex: 1;
+  font-size: 13px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+.import-map-select:focus { border-color: var(--primary); outline: none; }
+
+/* ── Import Preview Table ── */
+.import-preview-table th,
+.import-preview-table td {
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

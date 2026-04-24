@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}Import Devices{% endblock %}
+{% block page_title %}Import Devices{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('device_import_template') }}" class="btn btn-ghost">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download Template
+  </a>
+  <a href="{{ url_for('devices') }}" class="btn btn-outline">← Back to Devices</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Step indicator -->
+<div class="import-steps">
+  <div class="import-step {% if step == 'upload' %}active{% else %}done{% endif %}">
+    <span>{% if step != 'upload' %}✓{% else %}1{% endif %}</span> Upload File
+  </div>
+  <div class="import-step-arrow">›</div>
+  <div class="import-step {% if step == 'preview' %}active{% endif %}">
+    <span>2</span> Map Columns
+  </div>
+  <div class="import-step-arrow">›</div>
+  <div class="import-step">
+    <span>3</span> Confirm Import
+  </div>
+</div>
+
+{% if step == 'upload' %}
+<!-- ── Step 1: Upload ── -->
+<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+
+  <div class="form-card" style="max-width:540px;flex:1">
+    <div class="form-section-title">Upload your spreadsheet</div>
+    <p style="color:var(--text-2);font-size:13px;margin-bottom:20px">
+      Upload an Excel <code>.xlsx</code> or CSV file containing your existing device inventory.
+      Each row should be one device. Download the template above to see the expected format.
+    </p>
+
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('device_import') }}">
+      <input type="hidden" name="action" value="preview">
+
+      <div class="upload-drop-zone" id="import-zone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;color:var(--text-3)">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <p class="upload-hint">Drag &amp; drop your file here, or
+          <label for="import_file" class="upload-browse">browse to upload</label>
+        </p>
+        <p class="upload-types">Excel (.xlsx) or CSV — max 20 MB</p>
+        <input type="file" name="import_file" id="import_file" accept=".xlsx,.xls,.csv" style="display:none">
+        <div id="import-filename" class="upload-filename" style="display:none"></div>
+      </div>
+
+      <div class="form-actions" style="margin-top:16px">
+        <a href="{{ url_for('devices') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="import-submit" disabled>
+          Preview Import →
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="import-tips">
+    <div class="import-tip-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Tips for a smooth import
+    </div>
+    <ul class="import-tip-list">
+      <li>The <strong>first row</strong> must be column headers — they're matched automatically</li>
+      <li>Rows with <strong>duplicate asset tags or serial numbers</strong> are skipped</li>
+      <li>Dates: use <code>DD/MM/YYYY</code> or <code>YYYY-MM-DD</code></li>
+      <li>Status values: <code>assigned</code>, <code>available</code>, <code>maintenance</code>, <code>retired</code></li>
+      <li>Condition values: <code>New</code>, <code>Excellent</code>, <code>Good</code>, <code>Fair</code>, <code>Poor</code></li>
+      <li>Unmapped columns are safely ignored</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const zone   = document.getElementById('import-zone');
+const inp    = document.getElementById('import_file');
+const nameEl = document.getElementById('import-filename');
+const btn    = document.getElementById('import-submit');
+
+function setFile(f) {
+  nameEl.textContent = '✓ ' + f.name;
+  nameEl.style.display = 'block';
+  zone.classList.add('has-file');
+  btn.disabled = false;
+}
+inp.addEventListener('change', () => { if (inp.files[0]) setFile(inp.files[0]); });
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) { inp.files = e.dataTransfer.files; setFile(f); }
+});
+</script>
+
+{% elif step == 'preview' %}
+<!-- ── Step 2: Map columns + preview ── -->
+<form method="post" action="{{ url_for('device_import') }}">
+  <input type="hidden" name="action" value="import">
+  <input type="hidden" name="import_filename" value="{{ import_filename }}">
+
+  <!-- Column mapping -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <strong>Map Columns</strong>
+      <span style="color:var(--text-3);font-size:13px">
+        {{ headers|length }} columns detected · {{ total_rows }} data rows · auto-matched where possible
+      </span>
+    </div>
+    <div class="import-mapping-grid">
+      {% for header in headers %}
+      <div class="import-mapping-row">
+        <div class="import-col-name" title="{{ header }}">{{ header }}</div>
+        <div class="import-col-arrow">→</div>
+        <select name="map_{{ loop.index0 }}" class="import-map-select">
+          <option value="">— skip —</option>
+          {% for field in device_import_fields %}
+          <option value="{{ field }}"
+            {% if mapping.get(header) == field %}selected{% endif %}>
+            {{ field.replace('_', ' ').title() }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Data preview -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <strong>Data Preview</strong>
+      <span style="color:var(--text-3);font-size:13px">First {{ preview|length }} of {{ total_rows }} rows</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="table import-preview-table">
+        <thead>
+          <tr>
+            {% for h in headers %}
+            <th>{{ h }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in preview %}
+          <tr>
+            {% for cell in row %}
+            <td>{{ cell if cell else '—' }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a href="{{ url_for('device_import') }}" class="btn btn-ghost">← Upload Different File</a>
+    <button type="submit" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg>
+      Import {{ total_rows }} Device{{ 's' if total_rows != 1 }}
+    </button>
+  </div>
+</form>
+{% endif %}
+
+{% endblock %}
