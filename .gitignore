@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 tracker.db
 assets.xlsx
+
+node_modules/
+package-lock.json
+package.json
