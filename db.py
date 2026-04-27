@@ -226,9 +226,7 @@ def _migrate(conn):
 
     # Normalise trolley name spelling/capitalisation variations from Excel import
     trolley_map = [
-        # (LIKE pattern, canonical name)
-        ('%roll%1%(white)%',   'Trolley 1 (White)'),
-        ('%roll%1%(White)%',   'Trolley 1 (White)'),
+        # (LIKE pattern, canonical name) — only 4 trolleys exist
         ('%roll%1%(green)%',   'Trolley 1 (Green)'),
         ('%roll%1%(Green)%',   'Trolley 1 (Green)'),
         ('%roll%1(green)%',    'Trolley 1 (Green)'),
@@ -265,6 +263,19 @@ def _migrate(conn):
                 (serial, 'iPad', 'Apple', 'iPad 11-inch A16',
                  'Server Room', 'New', 'available', 'iPadOS'))
 
+    conn.commit()
+
+    # Fix make field where model starts with a different/correct brand
+    known_brands = ['Apple', 'Dell', 'Lenovo', 'HP', 'Samsung', 'Philips',
+                    'Acer', 'Microsoft', 'Toshiba', 'Asus', 'LG', 'Logitech']
+    for brand in known_brands:
+        try:
+            conn.execute(
+                "UPDATE devices SET make=? WHERE model LIKE ? AND LOWER(COALESCE(make,''))!=LOWER(?)",
+                (brand, f'{brand} %', brand)
+            )
+        except Exception:
+            pass
     conn.commit()
 
 
