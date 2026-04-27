@@ -224,6 +224,31 @@ def _migrate(conn):
     except Exception:
         pass
 
+    # Normalise trolley name spelling/capitalisation variations from Excel import
+    trolley_map = [
+        # (LIKE pattern, canonical name)
+        ('%roll%1%(white)%',   'Trolley 1 (White)'),
+        ('%roll%1%(White)%',   'Trolley 1 (White)'),
+        ('%roll%1%(green)%',   'Trolley 1 (Green)'),
+        ('%roll%1%(Green)%',   'Trolley 1 (Green)'),
+        ('%roll%1(green)%',    'Trolley 1 (Green)'),
+        ('%roll%1(Green)%',    'Trolley 1 (Green)'),
+        ('%roll%2%(gr%y)%',    'Trolley 2 (Grey)'),
+        ('%roll%3%(orange)%',  'Trolley 3 (Orange)'),
+        ('%roll%3%(Orange)%',  'Trolley 3 (Orange)'),
+        ('%roll%4%(white)%',   'Trolley 4 (White)'),
+        ('%roll%4%(White)%',   'Trolley 4 (White)'),
+    ]
+    for pattern, canonical in trolley_map:
+        try:
+            conn.execute(
+                "UPDATE devices SET trolley=? WHERE LOWER(trolley) LIKE LOWER(?)",
+                (canonical, pattern)
+            )
+        except Exception:
+            pass
+    conn.commit()
+
     # Insert the 7 iPad 11-inch A16 units if not already present
     ipads = [
         'JMVQ545G2L', 'FV9L4V2DH3', 'J6LF4HGX4F',

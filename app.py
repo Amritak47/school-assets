@@ -249,8 +249,9 @@ INVOICE_LOCATIONS = ['ICT Room','Staff Room','Library','Front Office',
                      'Desert Rose','Student Support','Server Room',
                      'Classroom 1','Classroom 2','Classroom 3','Classroom 4',
                      'Classroom 5','Classroom 6','Classrooms (General)','Storage','Other']
-TROLLEYS = ['Trolley 1 (White)','Trolley 2 (White)','Trolley 3 (Orange)',
-            'Trolley 4 (White)','Trolley 5','Other Trolley']
+TROLLEYS = ['Trolley 1 (White)','Trolley 1 (Green)',
+            'Trolley 2 (Grey)','Trolley 3 (Orange)',
+            'Trolley 4 (White)']
 FURNITURE_CATEGORIES = ['Desk','Chair','Table','Cabinet','Shelving','Whiteboard',
                         'Bookcase','Storage','Display','Other']
 FURNITURE_STATUSES = ['active','in storage','disposed','on loan']
