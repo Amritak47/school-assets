@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS devices (
     supplier TEXT,
     po_number TEXT,
     invoice_number TEXT,
+    trolley TEXT,
     hostname TEXT,
     domain_joined INTEGER DEFAULT 0,
     bitlocker_enabled INTEGER DEFAULT 0,
@@ -195,6 +196,7 @@ def _migrate(conn):
         "ALTER TABLE invoices ADD COLUMN file_path TEXT",
         "ALTER TABLE invoices ADD COLUMN location TEXT",
         "ALTER TABLE devices ADD COLUMN invoice_number TEXT",
+        "ALTER TABLE devices ADD COLUMN trolley TEXT",
     ]
     for sql in migrations:
         try:
@@ -206,12 +208,38 @@ def _migrate(conn):
     # Clean up literal "None" strings written by early Python str() coercion
     none_cols = ['asset_tag', 'serial_number', 'hostname', 'assigned_to',
                  'supplier', 'po_number', 'invoice_number', 'model',
-                 'funding_source', 'storage', 'charger_type', 'notes']
+                 'funding_source', 'storage', 'charger_type', 'notes', 'trolley']
     for col in none_cols:
         try:
             conn.execute(f"UPDATE devices SET {col}=NULL WHERE {col}='None'")
         except Exception:
             pass
+
+    # Move trolley names out of location into the trolley column
+    try:
+        conn.execute("""
+            UPDATE devices SET trolley=location, location=NULL
+            WHERE location LIKE 'Troll%' AND (trolley IS NULL OR trolley='')
+        """)
+    except Exception:
+        pass
+
+    # Insert the 7 iPad 11-inch A16 units if not already present
+    ipads = [
+        'JMVQ545G2L', 'FV9L4V2DH3', 'J6LF4HGX4F',
+        'H0Q5JY3WYJ', 'F2YFJ9H4DV', 'L50H6CW62G', 'CKYC2D6K9J',
+    ]
+    for serial in ipads:
+        exists = conn.execute(
+            "SELECT 1 FROM devices WHERE serial_number=?", (serial,)
+        ).fetchone()
+        if not exists:
+            conn.execute("""INSERT INTO devices
+                (serial_number,device_type,make,model,location,condition,status,os_version,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,datetime('now'))""",
+                (serial, 'iPad', 'Apple', 'iPad 11-inch A16',
+                 'Server Room', 'New', 'available', 'iPadOS'))
+
     conn.commit()
 
 

@@ -56,15 +56,28 @@
   <div class="form-grid">
     <div class="form-group">
       <label>Assigned To</label>
-      <input type="text" name="assigned_to" value="{{ device['assigned_to'] if device else '' }}" placeholder="Name or role">
+      <input type="text" name="assigned_to" value="{{ device['assigned_to'] if device else '' }}" placeholder="Person's name or role">
     </div>
     <div class="form-group">
-      <label>Location</label>
+      <label>Location (Room)</label>
       <select name="location">
-        <option value="">— Select —</option>
+        <option value="">— Select Room —</option>
         {% for l in LOCATIONS %}
           <option value="{{ l }}" {% if device and device['location']==l %}selected{% endif %}>{{ l }}</option>
         {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Trolley</label>
+      <select name="trolley">
+        <option value="">— No trolley —</option>
+        {% for t in TROLLEYS %}
+          <option value="{{ t }}" {% if device and device['trolley']==t %}selected
+          {% elif device and device['trolley'] and t not in TROLLEYS %}{% endif %}>{{ t }}</option>
+        {% endfor %}
+        {% if device and device['trolley'] and device['trolley'] not in TROLLEYS %}
+          <option value="{{ device['trolley'] }}" selected>{{ device['trolley'] }}</option>
+        {% endif %}
       </select>
     </div>
     <div class="form-group">

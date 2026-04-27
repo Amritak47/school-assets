@@ -588,6 +588,19 @@ small { font-size: 11px; }
   gap: 6px;
 }
 
+/* ── Trolley chip ── */
+.trolley-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #FEF3C7;
+  color: #92400E;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* ── Location chip ── */
 .loc-chip {
   display: inline-flex;

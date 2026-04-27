@@ -249,6 +249,8 @@ INVOICE_LOCATIONS = ['ICT Room','Staff Room','Library','Front Office',
                      'Desert Rose','Student Support','Server Room',
                      'Classroom 1','Classroom 2','Classroom 3','Classroom 4',
                      'Classroom 5','Classroom 6','Classrooms (General)','Storage','Other']
+TROLLEYS = ['Trolley 1 (White)','Trolley 2 (White)','Trolley 3 (Orange)',
+            'Trolley 4 (White)','Trolley 5','Other Trolley']
 FURNITURE_CATEGORIES = ['Desk','Chair','Table','Cabinet','Shelving','Whiteboard',
                         'Bookcase','Storage','Display','Other']
 FURNITURE_STATUSES = ['active','in storage','disposed','on loan']
@@ -350,6 +352,7 @@ app.jinja_env.globals.update(
     INVOICE_LOCATIONS=INVOICE_LOCATIONS,
     FURNITURE_CATEGORIES=FURNITURE_CATEGORIES,
     FURNITURE_STATUSES=FURNITURE_STATUSES,
+    TROLLEYS=TROLLEYS,
 )
 
 
@@ -639,6 +642,7 @@ def _save_device(id):
         f.get('supplier','').strip() or None,
         f.get('po_number','').strip() or None,
         f.get('invoice_number','').strip() or None,
+        f.get('trolley','').strip() or None,
         f.get('hostname','').strip() or None,
         1 if f.get('domain_joined') else 0,
         1 if f.get('bitlocker_enabled') else 0,
@@ -653,16 +657,16 @@ def _save_device(id):
         db.execute("""INSERT INTO devices
             (asset_tag,serial_number,device_type,make,model,assigned_to,location,
              status,condition,os_version,storage,purchase_date,purchase_price,
-             warranty_expiry,funding_source,supplier,po_number,invoice_number,hostname,
+             warranty_expiry,funding_source,supplier,po_number,invoice_number,trolley,hostname,
              domain_joined,bitlocker_enabled,mdm_enrolled,last_reimaged,
              charger_type,charger_included,case_loan,notes,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", vals)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", vals)
     else:
         db.execute("""UPDATE devices SET
             asset_tag=?,serial_number=?,device_type=?,make=?,model=?,
             assigned_to=?,location=?,status=?,condition=?,os_version=?,storage=?,
             purchase_date=?,purchase_price=?,warranty_expiry=?,funding_source=?,
-            supplier=?,po_number=?,invoice_number=?,hostname=?,domain_joined=?,bitlocker_enabled=?,
+            supplier=?,po_number=?,invoice_number=?,trolley=?,hostname=?,domain_joined=?,bitlocker_enabled=?,
             mdm_enrolled=?,last_reimaged=?,charger_type=?,charger_included=?,
             case_loan=?,notes=?,updated_at=? WHERE id=?""", vals + (id,))
     db.commit()

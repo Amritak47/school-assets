@@ -80,7 +80,14 @@
         <td><span class="type-chip">{{ d['device_type'] }}</span></td>
         <td>{{ display_model(d['make'], d['model']) }}<br><small class="text-muted mono">{{ d['serial_number'] if not d['asset_tag'] else '' }}</small></td>
         <td>{{ d['assigned_to'] or '<span class="text-muted">—</span>'|safe }}</td>
-        <td>{{ d['location'] or '—' }}</td>
+        <td>
+          {{ d['location'] or '' }}
+          {% if d['trolley'] %}
+            {% if d['location'] %}<br>{% endif %}
+            <span class="trolley-chip">{{ d['trolley'] }}</span>
+          {% endif %}
+          {% if not d['location'] and not d['trolley'] %}—{% endif %}
+        </td>
         <td>
           {% if d['status'] == 'assigned' %}<span class="badge badge-blue">Assigned</span>
           {% elif d['status'] == 'available' %}<span class="badge badge-green">Available</span>
