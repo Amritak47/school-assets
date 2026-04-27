@@ -78,7 +78,7 @@
           {% if d['serial_number'] and d['asset_tag'] %}<br><small class="text-muted mono">{{ d['serial_number'] }}</small>{% endif %}
         </td>
         <td><span class="type-chip">{{ d['device_type'] }}</span></td>
-        <td>{{ (d['make'] or '') + ' ' + (d['model'] or '') }}<br><small class="text-muted mono">{{ d['serial_number'] if not d['asset_tag'] else '' }}</small></td>
+        <td>{{ display_model(d['make'], d['model']) }}<br><small class="text-muted mono">{{ d['serial_number'] if not d['asset_tag'] else '' }}</small></td>
         <td>{{ d['assigned_to'] or '<span class="text-muted">—</span>'|safe }}</td>
         <td>{{ d['location'] or '—' }}</td>
         <td>

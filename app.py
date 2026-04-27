@@ -313,7 +313,19 @@ def fmt_currency(val):
         return str(val)
 
 
+def display_model(make, model):
+    """Return make+model string without duplicating make if model already starts with it."""
+    make = (make or '').strip()
+    model = (model or '').strip()
+    if not model:
+        return make or '—'
+    if make and model.lower().startswith(make.lower()):
+        return model
+    return f'{make} {model}' if make else model
+
+
 app.jinja_env.globals.update(
+    display_model=display_model,
     fmt_date=fmt_date,
     fmt_currency=fmt_currency,
     days_until=days_until,
@@ -616,38 +628,41 @@ def _save_device(id):
     f = request.form
     db = g.db
     vals = (
-        f.get('asset_tag','').strip(), f.get('serial_number','').strip(),
+        f.get('asset_tag','').strip() or None,
+        f.get('serial_number','').strip() or None,
         f.get('device_type',''), f.get('make',''), f.get('model','').strip(),
         f.get('assigned_to','').strip(), f.get('location',''),
         f.get('status','available'), f.get('condition','Good'),
         f.get('os_version',''), f.get('storage',''),
         f.get('purchase_date') or None, f.get('purchase_price') or None,
         f.get('warranty_expiry') or None, f.get('funding_source',''),
-        f.get('supplier','').strip(), f.get('po_number','').strip(),
-        f.get('hostname','').strip(),
+        f.get('supplier','').strip() or None,
+        f.get('po_number','').strip() or None,
+        f.get('invoice_number','').strip() or None,
+        f.get('hostname','').strip() or None,
         1 if f.get('domain_joined') else 0,
         1 if f.get('bitlocker_enabled') else 0,
         1 if f.get('mdm_enrolled') else 0,
         f.get('last_reimaged') or None,
         f.get('charger_type',''), 1 if f.get('charger_included') else 0,
         1 if f.get('case_loan') else 0,
-        f.get('notes','').strip(),
+        f.get('notes','').strip() or None,
         datetime.now().isoformat(),
     )
     if id is None:
         db.execute("""INSERT INTO devices
             (asset_tag,serial_number,device_type,make,model,assigned_to,location,
              status,condition,os_version,storage,purchase_date,purchase_price,
-             warranty_expiry,funding_source,supplier,po_number,hostname,
+             warranty_expiry,funding_source,supplier,po_number,invoice_number,hostname,
              domain_joined,bitlocker_enabled,mdm_enrolled,last_reimaged,
              charger_type,charger_included,case_loan,notes,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", vals)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", vals)
     else:
         db.execute("""UPDATE devices SET
             asset_tag=?,serial_number=?,device_type=?,make=?,model=?,
             assigned_to=?,location=?,status=?,condition=?,os_version=?,storage=?,
             purchase_date=?,purchase_price=?,warranty_expiry=?,funding_source=?,
-            supplier=?,po_number=?,hostname=?,domain_joined=?,bitlocker_enabled=?,
+            supplier=?,po_number=?,invoice_number=?,hostname=?,domain_joined=?,bitlocker_enabled=?,
             mdm_enrolled=?,last_reimaged=?,charger_type=?,charger_included=?,
             case_loan=?,notes=?,updated_at=? WHERE id=?""", vals + (id,))
     db.commit()

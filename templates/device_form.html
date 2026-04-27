@@ -22,15 +22,20 @@
     </div>
     <div class="form-group">
       <label>Asset Tag</label>
-      <input type="text" name="asset_tag" value="{{ device['asset_tag'] if device else '' }}" placeholder="e.g. NTS73117">
+      <input type="text" name="asset_tag"
+             value="{{ device['asset_tag'] if device and device['asset_tag'] else '' }}"
+             placeholder="e.g. NTS73117">
     </div>
     <div class="form-group">
       <label>Serial Number</label>
-      <input type="text" name="serial_number" value="{{ device['serial_number'] if device else '' }}">
+      <input type="text" name="serial_number"
+             value="{{ device['serial_number'] if device and device['serial_number'] else '' }}">
     </div>
     <div class="form-group">
       <label>Hostname / Computer Name</label>
-      <input type="text" name="hostname" value="{{ device['hostname'] if device else '' }}" placeholder="e.g. MPS-LAPTOP-001">
+      <input type="text" name="hostname"
+             value="{{ device['hostname'] if device and device['hostname'] else '' }}"
+             placeholder="e.g. MPS-LAPTOP-001">
     </div>
     <div class="form-group">
       <label>Make</label>
@@ -146,11 +151,17 @@
     </div>
     <div class="form-group">
       <label>Supplier</label>
-      <input type="text" name="supplier" value="{{ device['supplier'] if device else '' }}">
+      <input type="text" name="supplier" value="{{ device['supplier'] if device and device['supplier'] else '' }}">
     </div>
     <div class="form-group">
       <label>PO Number</label>
-      <input type="text" name="po_number" value="{{ device['po_number'] if device else '' }}">
+      <input type="text" name="po_number" value="{{ device['po_number'] if device and device['po_number'] else '' }}"
+             placeholder="e.g. PO15500143">
+    </div>
+    <div class="form-group">
+      <label>Invoice Number</label>
+      <input type="text" name="invoice_number" value="{{ device['invoice_number'] if device and device['invoice_number'] else '' }}"
+             placeholder="Supplier invoice reference">
     </div>
   </div>
 

@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS devices (
     funding_source TEXT,
     supplier TEXT,
     po_number TEXT,
+    invoice_number TEXT,
     hostname TEXT,
     domain_joined INTEGER DEFAULT 0,
     bitlocker_enabled INTEGER DEFAULT 0,
@@ -193,6 +194,7 @@ def _migrate(conn):
     migrations = [
         "ALTER TABLE invoices ADD COLUMN file_path TEXT",
         "ALTER TABLE invoices ADD COLUMN location TEXT",
+        "ALTER TABLE devices ADD COLUMN invoice_number TEXT",
     ]
     for sql in migrations:
         try:
@@ -200,6 +202,17 @@ def _migrate(conn):
             conn.commit()
         except Exception:
             pass
+
+    # Clean up literal "None" strings written by early Python str() coercion
+    none_cols = ['asset_tag', 'serial_number', 'hostname', 'assigned_to',
+                 'supplier', 'po_number', 'invoice_number', 'model',
+                 'funding_source', 'storage', 'charger_type', 'notes']
+    for col in none_cols:
+        try:
+            conn.execute(f"UPDATE devices SET {col}=NULL WHERE {col}='None'")
+        except Exception:
+            pass
+    conn.commit()
 
 
 def _seed(conn):
