@@ -312,6 +312,15 @@ def _migrate(conn):
         )
     except Exception:
         pass
+
+    # Trolleys live in Server Room — fix location for all trolley-assigned devices
+    try:
+        conn.execute("""
+            UPDATE devices SET location='Server Room'
+            WHERE trolley IS NOT NULL AND trolley != ''
+        """)
+    except Exception:
+        pass
     conn.commit()
 
 
