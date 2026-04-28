@@ -313,14 +313,21 @@ def _migrate(conn):
     except Exception:
         pass
 
-    # Trolleys live in Server Room — fix location for all trolley-assigned devices
-    try:
-        conn.execute("""
-            UPDATE devices SET location='Server Room'
-            WHERE trolley IS NOT NULL AND trolley != ''
-        """)
-    except Exception:
-        pass
+    # Each trolley has a permanent home room
+    trolley_homes = [
+        ('Trolley 1 (Green)',  'Server Room'),
+        ('Trolley 3 (Orange)', 'Server Room'),
+        ('Trolley 2 (Grey)',   'Acacia'),
+        ('Trolley 4 (White)',  'IEC Frangipani'),
+    ]
+    for trolley, home in trolley_homes:
+        try:
+            conn.execute(
+                "UPDATE devices SET location=? WHERE trolley=?",
+                (home, trolley)
+            )
+        except Exception:
+            pass
     conn.commit()
 
 
