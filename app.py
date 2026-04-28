@@ -1164,31 +1164,215 @@ def export_devices_xlsx():
 
 @app.route('/export/licences.csv')
 def export_licences():
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    import datetime as dt
+
     rows = g.db.execute("SELECT * FROM licences ORDER BY software").fetchall()
-    out = io.StringIO()
-    w = csv.writer(out)
-    w.writerow(['Software','Vendor','Type','Seats','Cost/Unit','Total','Renewal','Status','Notes'])
-    for r in rows:
-        w.writerow([r['software'],r['vendor'],r['licence_type'],r['seats'],
-                    r['cost_per_unit'],r['total_cost'],r['renewal_date'],r['status'],r['notes']])
-    return Response(out.getvalue(), mimetype='text/csv',
-                    headers={'Content-Disposition': 'attachment; filename=licences.csv'})
+
+    PURPLE    = '4527A0'
+    WHITE_FG  = 'FFFFFF'
+    ALT_ROW   = 'F5F3FF'
+    WHITE     = 'FFFFFF'
+    thin      = Side(style='thin', color='E5E7EB')
+    border    = Border(left=thin, right=thin, top=thin, bottom=thin)
+    today     = dt.date.today().strftime('%d %B %Y')
+    today_str = dt.date.today().strftime('%Y%m%d')
+
+    STATUS_FILLS = {
+        'active':   PatternFill('solid', fgColor='DCFCE7'),
+        'expired':  PatternFill('solid', fgColor='FEE2E2'),
+        'pending':  PatternFill('solid', fgColor='FEF3C7'),
+        'inactive': PatternFill('solid', fgColor='F3F4F6'),
+    }
+    STATUS_FONTS = {
+        'active':   Font(name='Calibri', color='166534', bold=True, size=10),
+        'expired':  Font(name='Calibri', color='991B1B', bold=True, size=10),
+        'pending':  Font(name='Calibri', color='92400E', bold=True, size=10),
+        'inactive': Font(name='Calibri', color='6B7280', bold=True, size=10),
+    }
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Licences'
+
+    headers = ['Software', 'Vendor', 'Licence Type', 'Seats',
+               'Cost / Unit', 'Total Cost', 'Billing Year',
+               'Renewal Date', 'Status', 'Assigned To', 'Notes']
+    col_widths = [28, 20, 16, 8, 12, 12, 12, 14, 12, 22, 36]
+    n_cols = len(headers)
+
+    # Title
+    ws.merge_cells(f'A1:{get_column_letter(n_cols)}1')
+    tc = ws['A1']
+    tc.value     = f'Moil Primary School — Software Licences    {len(rows)} record{"s" if len(rows)!=1 else ""}    Printed {today}'
+    tc.font      = Font(name='Calibri', bold=True, size=12, color=WHITE_FG)
+    tc.fill      = PatternFill('solid', fgColor=PURPLE)
+    tc.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[1].height = 26
+
+    # Headers
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=2, column=col, value=h)
+        cell.fill      = PatternFill('solid', fgColor=PURPLE)
+        cell.font      = Font(name='Calibri', bold=True, size=10, color=WHITE_FG)
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border    = border
+    ws.row_dimensions[2].height = 18
+
+    # Data
+    for i, r in enumerate(rows):
+        rn  = i + 3
+        alt = PatternFill('solid', fgColor=ALT_ROW if i % 2 else WHITE)
+        stat = (r['status'] or '').lower()
+        vals = [
+            r['software'] or '',
+            r['vendor'] or '',
+            r['licence_type'] or '',
+            r['seats'] or '',
+            f"${r['cost_per_unit']:,.2f}" if r['cost_per_unit'] else '',
+            f"${r['total_cost']:,.2f}"    if r['total_cost']    else '',
+            r['billing_year'] or '',
+            r['renewal_date'] or '',
+            (r['status'] or '').title(),
+            r['assigned_to'] or '',
+            r['notes'] or '',
+        ]
+        for col, val in enumerate(vals, 1):
+            cell = ws.cell(row=rn, column=col, value=val)
+            cell.border = border
+            if col == 9 and stat in STATUS_FILLS:
+                cell.fill      = STATUS_FILLS[stat]
+                cell.font      = STATUS_FONTS[stat]
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+            else:
+                cell.fill      = alt
+                cell.font      = Font(name='Calibri', size=10)
+                cell.alignment = Alignment(vertical='center', wrap_text=(col == 11))
+        ws.row_dimensions[rn].height = 15
+
+    for col, w in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = w
+    ws.auto_filter.ref = f'A2:{get_column_letter(n_cols)}{len(rows)+2}'
+    ws.freeze_panes    = 'A3'
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToPage   = True
+    ws.page_setup.fitToWidth  = 1
+    ws.page_setup.fitToHeight = 0
+    ws.page_setup.paperSize   = 9
+    ws.print_title_rows       = '1:2'
+    ws.page_margins.left = ws.page_margins.right  = 0.5
+    ws.page_margins.top  = ws.page_margins.bottom = 0.6
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    out = io.BytesIO()
+    wb.save(out)
+    out.seek(0)
+    return Response(
+        out.getvalue(),
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename=Moil_Licences_{today_str}.xlsx'}
+    )
 
 
 @app.route('/export/maintenance.csv')
 def export_maintenance():
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    import datetime as dt
+
     rows = g.db.execute("""
-        SELECT m.*, d.asset_tag, d.device_type FROM maintenance m
+        SELECT m.*, d.asset_tag, d.serial_number, d.device_type, d.make, d.model
+        FROM maintenance m
         LEFT JOIN devices d ON m.device_id=d.id ORDER BY m.date DESC
     """).fetchall()
-    out = io.StringIO()
-    w = csv.writer(out)
-    w.writerow(['Date','Asset Tag','Device Type','Type','Technician','Cost','Notes'])
-    for r in rows:
-        w.writerow([r['date'],r['asset_tag'],r['device_type'],r['type'],
-                    r['technician'],r['cost'],r['notes']])
-    return Response(out.getvalue(), mimetype='text/csv',
-                    headers={'Content-Disposition': 'attachment; filename=maintenance.csv'})
+
+    BROWN     = '4E342E'
+    WHITE_FG  = 'FFFFFF'
+    ALT_ROW   = 'FFF8F6'
+    WHITE     = 'FFFFFF'
+    thin      = Side(style='thin', color='E5E7EB')
+    border    = Border(left=thin, right=thin, top=thin, bottom=thin)
+    today     = dt.date.today().strftime('%d %B %Y')
+    today_str = dt.date.today().strftime('%Y%m%d')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Maintenance'
+
+    headers = ['Date', 'Asset Tag', 'Serial No', 'Device Type',
+               'Make / Model', 'Repair Type', 'Technician',
+               'Cost', 'Status After', 'Notes']
+    col_widths = [13, 13, 14, 16, 26, 18, 18, 10, 14, 36]
+    n_cols = len(headers)
+
+    # Title
+    ws.merge_cells(f'A1:{get_column_letter(n_cols)}1')
+    tc = ws['A1']
+    tc.value     = f'Moil Primary School — Maintenance Records    {len(rows)} record{"s" if len(rows)!=1 else ""}    Printed {today}'
+    tc.font      = Font(name='Calibri', bold=True, size=12, color=WHITE_FG)
+    tc.fill      = PatternFill('solid', fgColor=BROWN)
+    tc.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[1].height = 26
+
+    # Headers
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=2, column=col, value=h)
+        cell.fill      = PatternFill('solid', fgColor=BROWN)
+        cell.font      = Font(name='Calibri', bold=True, size=10, color=WHITE_FG)
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border    = border
+    ws.row_dimensions[2].height = 18
+
+    # Data
+    for i, r in enumerate(rows):
+        rn  = i + 3
+        alt = PatternFill('solid', fgColor=ALT_ROW if i % 2 else WHITE)
+        make_model = ' '.join(filter(None, [r['make'], r['model']])) or '—'
+        vals = [
+            r['date'] or '',
+            r['asset_tag'] or r['serial_number'] or '—',
+            r['serial_number'] or '',
+            r['device_type'] or '',
+            make_model,
+            r['type'] or '',
+            r['technician'] or '',
+            f"${r['cost']:,.2f}" if r['cost'] else '',
+            r['status_after'] or '',
+            r['notes'] or '',
+        ]
+        for col, val in enumerate(vals, 1):
+            cell = ws.cell(row=rn, column=col, value=val)
+            cell.fill      = alt
+            cell.font      = Font(name='Calibri', size=10)
+            cell.alignment = Alignment(vertical='center', wrap_text=(col == 10))
+            cell.border    = border
+        ws.row_dimensions[rn].height = 15
+
+    for col, w in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = w
+    ws.auto_filter.ref = f'A2:{get_column_letter(n_cols)}{len(rows)+2}'
+    ws.freeze_panes    = 'A3'
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToPage   = True
+    ws.page_setup.fitToWidth  = 1
+    ws.page_setup.fitToHeight = 0
+    ws.page_setup.paperSize   = 9
+    ws.print_title_rows       = '1:2'
+    ws.page_margins.left = ws.page_margins.right  = 0.5
+    ws.page_margins.top  = ws.page_margins.bottom = 0.6
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    out = io.BytesIO()
+    wb.save(out)
+    out.seek(0)
+    return Response(
+        out.getvalue(),
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename=Moil_Maintenance_{today_str}.xlsx'}
+    )
 
 
 @app.route('/export/backup/download')
