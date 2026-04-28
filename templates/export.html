@@ -15,13 +15,21 @@
   </div>
 
   <div class="card">
-    <div class="card-head">Download CSV Files</div>
+    <div class="card-head">Download Files</div>
     <div class="export-actions">
-      <a href="{{ url_for('export_devices') }}" class="export-btn">
+      <a href="{{ url_for('export_devices_xlsx') }}" class="export-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
         <div>
-          <strong>Devices CSV</strong>
-          <span>All {{ dev_count }} devices with full details</span>
+          <strong>Devices — Formatted Excel</strong>
+          <span>All {{ dev_count }} devices · colour-coded · print-ready .xlsx</span>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </a>
+      <a href="{{ url_for('export_devices') }}" class="export-btn" style="opacity:.6">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <div>
+          <strong>Devices — Plain CSV</strong>
+          <span>Raw data for importing into other systems</span>
         </div>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </a>
