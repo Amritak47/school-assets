@@ -404,6 +404,7 @@ def devices():
     dtype = request.args.get('type', '')
     status = request.args.get('status', '')
     condition = request.args.get('condition', '')
+    trolley = request.args.get('trolley', '')
 
     query = "SELECT * FROM devices WHERE 1=1"
     params = []
@@ -422,12 +423,15 @@ def devices():
     if condition:
         query += " AND condition=?"
         params.append(condition)
+    if trolley:
+        query += " AND trolley=?"
+        params.append(trolley)
 
     query += " ORDER BY device_type, asset_tag"
     rows = db.execute(query, params).fetchall()
 
     return render_template('devices.html', devices=rows,
-        search=search, dtype=dtype, status=status, condition=condition)
+        search=search, dtype=dtype, status=status, condition=condition, trolley=trolley)
 
 
 @app.route('/devices/new', methods=['GET', 'POST'])

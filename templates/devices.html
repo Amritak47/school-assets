@@ -39,9 +39,15 @@
         <option value="{{ c }}" {% if condition == c %}selected{% endif %}>{{ c }}</option>
       {% endfor %}
     </select>
+    <select name="trolley" onchange="this.form.submit()">
+      <option value="">All Trolleys</option>
+      {% for t in TROLLEYS %}
+        <option value="{{ t }}" {% if trolley == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
     <button type="submit" class="btn btn-outline">Filter</button>
-    {% if search or dtype or status or condition %}
-      <a href="{{ url_for('devices') }}" class="btn btn-ghost">Clear</a>
+    {% if search or dtype or status or condition or trolley %}
+      <a href="{{ url_for('devices') }}" class="btn btn-ghost">Clear filters</a>
     {% endif %}
     <span class="rec-count">{{ devices|length }} device{{ 's' if devices|length != 1 }}</span>
     <a href="{{ url_for('export_devices') }}" class="btn btn-ghost btn-sm ml-auto" style="margin-left:auto">
