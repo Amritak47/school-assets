@@ -3,6 +3,32 @@ document.querySelectorAll('.alert').forEach(el => {
   setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.4s'; setTimeout(() => el.remove(), 400); }, 4000);
 });
 
+// Mobile sidebar toggle
+(function () {
+  const ham = document.getElementById('hamburger');
+  const closeBtn = document.getElementById('sidebar-close');
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('mobile-overlay');
+  if (!ham || !sidebar || !overlay) return;
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+  ham.addEventListener('click', openSidebar);
+  overlay.addEventListener('click', closeSidebar);
+  closeBtn?.addEventListener('click', closeSidebar);
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
+  });
+})();
+
 // Searchable device picker
 document.querySelectorAll('.device-picker').forEach(picker => {
   const input = picker.querySelector('.device-picker-input');

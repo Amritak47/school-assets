@@ -1257,3 +1257,272 @@ small { font-size: 11px; }
   background: var(--primary-light);
   border-top: 2px solid var(--primary-mid);
 }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE — hamburger, overlay, sidebar close
+   ═══════════════════════════════════════════════════════ */
+
+.hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--r);
+  cursor: pointer;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.hamburger:hover { background: var(--gray-light); }
+.hamburger svg { width: 20px; height: 20px; pointer-events: none; }
+
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.50);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.mobile-overlay.visible { display: block; }
+
+.sidebar-close {
+  display: none;
+  margin-left: auto;
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,.15);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sidebar-close svg { width: 14px; height: 14px; pointer-events: none; }
+.sidebar-close:hover { background: rgba(255,255,255,.25); }
+
+/* Active nav link: left accent bar */
+.nav-link.active {
+  background: rgba(108,179,63,.22);
+  color: #fff;
+  border-left: 3px solid var(--accent);
+  padding-left: 7px;
+}
+
+/* ── Dashboard quick actions ── */
+.dash-quick-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.dash-qa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  transition: box-shadow .15s, transform .15s, border-color .15s;
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+}
+.dash-qa:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #d1d5db; color: var(--text); }
+.dash-qa-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.dash-qa-icon svg { width: 18px; height: 18px; }
+
+/* ── Dashboard alert banner ── */
+.dash-alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  border-left: 4px solid var(--orange);
+  border-radius: var(--r-lg);
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #92400E;
+}
+.dash-alert-banner svg { width: 16px; height: 16px; stroke: #D97706; flex-shrink: 0; }
+.dash-alert-link { margin-left: auto; color: var(--orange); text-decoration: none; font-weight: 600; font-size: 12px; white-space: nowrap; }
+.dash-alert-link:hover { text-decoration: underline; }
+
+/* ── Stat card as link ── */
+.stat-card-link { text-decoration: none; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+.stat-card-link:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* ── Type bar label as link ── */
+.type-label-link { color: var(--text-2); text-decoration: none; width: 130px; flex-shrink: 0; font-size: 12px; font-weight: 500; transition: color .15s; }
+.type-label-link:hover { color: var(--primary); text-decoration: underline; }
+
+/* ── Card head: icon + right-aligned link ── */
+.card-head svg { width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0; }
+
+/* ── Table wrap (horizontal scroll helper) ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — 768px breakpoint
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body { overflow: auto; height: auto; }
+  .app-shell { height: auto; min-height: 100vh; overflow: visible; }
+
+  /* Sidebar: slide-in drawer */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    box-shadow: none;
+  }
+  .sidebar.open { transform: translateX(0); box-shadow: 8px 0 40px rgba(0,0,0,.25); }
+  .sidebar-close { display: flex; }
+
+  /* Main */
+  .main { width: 100%; display: block; overflow: visible; }
+  .topbar { position: sticky; top: 0; z-index: 100; padding: 0 14px; height: auto; min-height: var(--topbar-h); flex-wrap: wrap; gap: 6px 8px; }
+  .hamburger { display: flex; }
+  .page-title { font-size: 15px; }
+  .content { padding: 12px; overflow: visible; }
+
+  /* Tables: horizontal scroll inside cards */
+  .card { overflow: visible; }
+  .card .table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .card .table thead, .card .table tbody, .card .table tfoot { display: table; width: 100%; }
+
+  /* Stat grid */
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+  .stat-card { padding: 12px 10px; gap: 8px; }
+  .stat-value { font-size: 20px; }
+  .stat-icon { width: 34px; height: 34px; }
+  .stat-icon svg { width: 15px; height: 15px; }
+
+  /* Dashboard */
+  .dash-row { grid-template-columns: 1fr; gap: 12px; }
+  .dash-quick-actions { gap: 8px; }
+  .dash-qa { padding: 12px 8px; min-width: 60px; font-size: 11px; }
+  .dash-qa-icon { width: 32px; height: 32px; border-radius: 8px; }
+  .dash-qa-icon svg { width: 15px; height: 15px; }
+
+  /* Budget */
+  .b-hero { flex-direction: column; align-items: flex-start; gap: 14px; padding: 16px; }
+  .b-hero-left { flex: none; width: 100%; }
+  .b-hero-center { width: 100%; }
+  .b-hero-right { width: 100%; }
+  .b-hero-edit-btn { width: 100%; justify-content: center; }
+  .b-kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .b-charts-grid { grid-template-columns: 1fr; }
+  .b-year-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+
+  /* Forms */
+  .form-card { padding: 16px; max-width: none; }
+  .form-grid { grid-template-columns: 1fr; gap: 10px; }
+  .form-group.full-width { grid-column: span 1; }
+  .checkbox-label { padding-top: 10px; }
+  .form-actions { flex-direction: column-reverse; gap: 8px; }
+  .form-actions .btn { justify-content: center; }
+
+  /* Filters bar: horizontal scroll */
+  .filters { overflow-x: auto; flex-wrap: nowrap; padding: 10px 12px; gap: 6px; scrollbar-width: none; }
+  .filters::-webkit-scrollbar { display: none; }
+  .search-box { min-width: 170px; }
+
+  /* Topbar actions: smaller buttons */
+  .topbar-actions .btn { font-size: 12px; padding: 6px 10px; }
+
+  /* Detail, export, checkout: stack */
+  .detail-grid { grid-template-columns: 1fr; gap: 12px; }
+  .export-grid { grid-template-columns: 1fr; }
+  .checkout-grid { grid-template-columns: 1fr; }
+  .vendor-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════════════════ */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body { background: #fff; color: #000; font-size: 11pt; overflow: visible; height: auto; }
+
+  .sidebar,
+  .hamburger,
+  .mobile-overlay,
+  .sidebar-close,
+  .topbar-actions,
+  .action-cell,
+  .filters .btn,
+  .filters select,
+  .btn-icon,
+  .btn-primary,
+  .btn-ghost,
+  .btn-outline,
+  .b-hero-edit-btn,
+  .modal-overlay,
+  .dash-quick-actions { display: none !important; }
+
+  .app-shell { display: block; height: auto; }
+  .main { display: block; overflow: visible; width: 100%; }
+  .content { overflow: visible; padding: 0; height: auto; }
+
+  .topbar {
+    display: flex;
+    border-bottom: 2px solid #000;
+    margin-bottom: 14pt;
+    padding: 8pt 0;
+    box-shadow: none;
+    height: auto;
+    position: static;
+  }
+  .page-title { font-size: 16pt; font-weight: 700; }
+  .topbar::after {
+    content: 'Moil Primary School · IT Asset Tracker';
+    margin-left: auto;
+    font-size: 9pt;
+    color: #666;
+    align-self: center;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    border-radius: 4pt;
+    margin-bottom: 12pt;
+    page-break-inside: avoid;
+    overflow: visible;
+  }
+  .card-head { background: #f0f0f0 !important; }
+
+  .table { width: 100%; }
+  .table thead th { background: #f0f0f0 !important; color: #333; border-bottom: 1px solid #ccc; font-size: 9pt; padding: 5pt 7pt; }
+  .table tbody td { border-bottom: 1px solid #e8e8e8; padding: 5pt 7pt; font-size: 10pt; }
+  .table tbody tr:hover td { background: transparent !important; }
+
+  .alert-list { max-height: none; overflow: visible; }
+
+  .stat-grid { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 8pt; }
+  .stat-card { box-shadow: none; border: 1px solid #ccc; padding: 8pt 10pt; break-inside: avoid; }
+
+  .badge { border: 1px solid currentColor; }
+
+  @page { margin: 1.5cm; }
+  h1, h2, h3 { page-break-after: avoid; }
+  .card { page-break-inside: avoid; }
+  tr { page-break-inside: avoid; }
+}
