@@ -278,6 +278,42 @@ def _migrate(conn):
             pass
     conn.commit()
 
+    # Assign devices to trolleys (only if trolley not already set)
+    trolley_assignments = [
+        # Trolley 3 (Orange)
+        ('Trolley 3 (Orange)', [
+            'NTS79408','NTS79422','NTS79399','NTS68502','NTS61840','NTS79415',
+            'NTS79426','NTS79424','NTS79427','NTS68512','NTS68526','NTS79409',
+        ]),
+        # Trolley 3 (Orange) — serial-only device
+        # handled below via serial lookup
+        # Trolley 1 (Green)
+        ('Trolley 1 (Green)', [
+            'NTS61847','NTS68519','NTS61843','NTS68505',
+            'NTS86820','NTS86822','NTS86813','NTS86816','NTS86819',
+            'NTS86809','NTS86810','NTS86811','NTS86823','NTS86814',
+            'NTS86815','NTS86812','NTS86817','NTS86818','NTS87181',
+        ]),
+    ]
+    for trolley, asset_tags in trolley_assignments:
+        for tag in asset_tags:
+            try:
+                conn.execute(
+                    "UPDATE devices SET trolley=? WHERE asset_tag=? AND (trolley IS NULL OR trolley='')",
+                    (trolley, tag)
+                )
+            except Exception:
+                pass
+
+    # Serial-only assignment (no asset tag label on device)
+    try:
+        conn.execute(
+            "UPDATE devices SET trolley='Trolley 3 (Orange)' WHERE serial_number='C0DYTT3' AND (trolley IS NULL OR trolley='')"
+        )
+    except Exception:
+        pass
+    conn.commit()
+
 
 def _seed(conn):
     seed_file = os.path.join(os.path.dirname(__file__), 'seed_data.json')
