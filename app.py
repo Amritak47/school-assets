@@ -921,27 +921,32 @@ def export_devices():
 @app.route('/export/devices.xlsx')
 def export_devices_xlsx():
     from openpyxl import Workbook
-    from openpyxl.styles import (Font, PatternFill, Alignment, Border, Side,
-                                  GradientFill)
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
-    from openpyxl.worksheet.table import Table, TableStyleInfo
     import datetime as dt
+    from collections import defaultdict
 
-    rows = g.db.execute(
-        "SELECT * FROM devices ORDER BY device_type, asset_tag"
+    all_rows = g.db.execute(
+        "SELECT * FROM devices ORDER BY asset_tag"
     ).fetchall()
 
-    wb = Workbook()
-    ws = wb.active
-    ws.title = 'Devices'
-
     # ── Palette ──────────────────────────────────────────
-    GREEN      = '1B5E20'
-    GREEN_LIGHT= 'E8F5E9'
-    HEADER_BG  = '1B5E20'
-    HEADER_FG  = 'FFFFFF'
-    ALT_ROW    = 'F9FAFB'
-    WHITE      = 'FFFFFF'
+    GREEN       = '1B5E20'
+    HEADER_FG   = 'FFFFFF'
+    ALT_ROW     = 'F9FAFB'
+    WHITE       = 'FFFFFF'
+
+    # Per-tab accent colours (header bg)
+    TAB_COLOURS = {
+        'Student Laptop':  '1565C0',
+        'Teacher Laptop':  '6A1B9A',
+        'Staff Laptop':    '4527A0',
+        'iPad':            '00695C',
+        'New PC Lab PC':   '2E7D32',
+        'Desktop PC':      '4E342E',
+        'Monitor':         '37474F',
+    }
+    DEFAULT_TAB = '37474F'
 
     STATUS_FILLS = {
         'assigned':    PatternFill('solid', fgColor='DBEAFE'),
@@ -950,120 +955,206 @@ def export_devices_xlsx():
         'retired':     PatternFill('solid', fgColor='F3F4F6'),
     }
     STATUS_FONTS = {
-        'assigned':    Font(color='1E40AF', bold=True, size=10),
-        'available':   Font(color='166534', bold=True, size=10),
-        'maintenance': Font(color='92400E', bold=True, size=10),
-        'retired':     Font(color='6B7280', bold=True, size=10),
+        'assigned':    Font(name='Calibri', color='1E40AF', bold=True, size=10),
+        'available':   Font(name='Calibri', color='166534', bold=True, size=10),
+        'maintenance': Font(name='Calibri', color='92400E', bold=True, size=10),
+        'retired':     Font(name='Calibri', color='6B7280', bold=True, size=10),
     }
-
-    thin = Side(style='thin', color='E5E7EB')
+    thin   = Side(style='thin',   color='E5E7EB')
+    medium = Side(style='medium', color='CCCCCC')
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # ── Title row ────────────────────────────────────────
-    today = dt.date.today().strftime('%d %B %Y')
-    ws.merge_cells('A1:Q1')
-    title_cell = ws['A1']
-    title_cell.value = f'Moil Primary School — IT Asset Register    Printed {today}'
-    title_cell.font = Font(name='Calibri', bold=True, size=13, color=HEADER_FG)
-    title_cell.fill = PatternFill('solid', fgColor=GREEN)
-    title_cell.alignment = Alignment(horizontal='left', vertical='center',
-                                     indent=1)
-    ws.row_dimensions[1].height = 28
+    today     = dt.date.today().strftime('%d %B %Y')
+    today_str = dt.date.today().strftime('%Y%m%d')
 
-    # ── Column headers ───────────────────────────────────
-    headers = ['Asset Tag', 'Serial No', 'Type', 'Make', 'Model',
-               'Assigned To', 'Location', 'Trolley', 'Status', 'Condition',
-               'OS', 'Purchase Date', 'Warranty Expiry',
-               'Domain', 'BitLocker', 'MDM', 'Notes']
-    hdr_fill = PatternFill('solid', fgColor=HEADER_BG)
-    hdr_font = Font(name='Calibri', bold=True, size=10, color=HEADER_FG)
-    hdr_align = Alignment(horizontal='center', vertical='center', wrap_text=False)
+    # ── Group by device type ─────────────────────────────
+    type_order = ['Student Laptop', 'Teacher Laptop', 'Staff Laptop',
+                  'iPad', 'New PC Lab PC', 'Desktop PC', 'Monitor']
+    by_type = defaultdict(list)
+    for r in all_rows:
+        by_type[r['device_type'] or 'Other'].append(r)
 
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=2, column=col, value=h)
-        cell.fill = hdr_fill
-        cell.font = hdr_font
-        cell.alignment = hdr_align
-        cell.border = border
-    ws.row_dimensions[2].height = 20
+    # Put known types first, then anything else alphabetically
+    all_types = type_order + sorted(
+        [t for t in by_type if t not in type_order]
+    )
+    all_types = [t for t in all_types if t in by_type]
 
-    # ── Data rows ────────────────────────────────────────
-    for i, r in enumerate(rows):
-        row_num = i + 3
-        is_alt = (i % 2 == 1)
-        default_fill = PatternFill('solid', fgColor=ALT_ROW if is_alt else WHITE)
+    # ── Helper: write one device sheet ───────────────────
+    def write_sheet(ws, rows, sheet_title, accent):
+        headers = ['Asset Tag', 'Serial No', 'Make', 'Model',
+                   'Assigned To', 'Location', 'Trolley', 'Status',
+                   'Condition', 'OS', 'Purchase Date', 'Warranty Expiry',
+                   'Domain', 'BitLocker', 'MDM', 'Notes']
+        col_widths = [12, 14, 10, 26, 18, 16, 18, 12, 11,
+                      12, 14, 16, 8, 9, 6, 34]
+        n_cols = len(headers)
 
-        status = (r['status'] or '').lower()
-        values = [
-            r['asset_tag'] or '',
-            r['serial_number'] or '',
-            r['device_type'] or '',
-            r['make'] or '',
-            r['model'] or '',
-            r['assigned_to'] or '',
-            r['location'] or '',
-            r['trolley'] or '',
-            (r['status'] or '').title(),
-            r['condition'] or '',
-            r['os_version'] or '',
-            r['purchase_date'] or '',
-            r['warranty_expiry'] or '',
-            'Yes' if r['domain_joined'] else 'No',
-            'Yes' if r['bitlocker_enabled'] else 'No',
-            'Yes' if r['mdm_enrolled'] else 'No',
-            r['notes'] or '',
-        ]
-        for col, val in enumerate(values, 1):
-            cell = ws.cell(row=row_num, column=col, value=val)
-            cell.font = Font(name='Calibri', size=10)
-            cell.alignment = Alignment(vertical='center', wrap_text=(col == 17))
+        # Title row
+        ws.merge_cells(f'A1:{get_column_letter(n_cols)}1')
+        tc = ws['A1']
+        tc.value = (f'Moil Primary School — {sheet_title}'
+                    f'    {len(rows)} device{"s" if len(rows) != 1 else ""}'
+                    f'    Printed {today}')
+        tc.font      = Font(name='Calibri', bold=True, size=12, color=HEADER_FG)
+        tc.fill      = PatternFill('solid', fgColor=accent)
+        tc.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws.row_dimensions[1].height = 26
+
+        # Header row
+        hdr_fill  = PatternFill('solid', fgColor=accent)
+        hdr_font  = Font(name='Calibri', bold=True, size=10, color=HEADER_FG)
+        hdr_align = Alignment(horizontal='center', vertical='center')
+        for col, h in enumerate(headers, 1):
+            cell = ws.cell(row=2, column=col, value=h)
+            cell.fill      = hdr_fill
+            cell.font      = hdr_font
+            cell.alignment = hdr_align
+            cell.border    = border
+        ws.row_dimensions[2].height = 18
+
+        # Data rows
+        for i, r in enumerate(rows):
+            rn   = i + 3
+            alt  = PatternFill('solid', fgColor=ALT_ROW if i % 2 else WHITE)
+            stat = (r['status'] or '').lower()
+            vals = [
+                r['asset_tag']      or '',
+                r['serial_number']  or '',
+                r['make']           or '',
+                r['model']          or '',
+                r['assigned_to']    or '',
+                r['location']       or '',
+                r['trolley']        or '',
+                (r['status'] or '').title(),
+                r['condition']      or '',
+                r['os_version']     or '',
+                r['purchase_date']  or '',
+                r['warranty_expiry'] or '',
+                'Yes' if r['domain_joined']     else 'No',
+                'Yes' if r['bitlocker_enabled'] else 'No',
+                'Yes' if r['mdm_enrolled']      else 'No',
+                r['notes']          or '',
+            ]
+            for col, val in enumerate(vals, 1):
+                cell = ws.cell(row=rn, column=col, value=val)
+                cell.font   = Font(name='Calibri', size=10)
+                cell.border = border
+                if col == 8 and stat in STATUS_FILLS:
+                    cell.fill      = STATUS_FILLS[stat]
+                    cell.font      = STATUS_FONTS[stat]
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                else:
+                    cell.fill      = alt
+                    cell.alignment = Alignment(vertical='center',
+                                               wrap_text=(col == 16))
+            ws.row_dimensions[rn].height = 15
+
+        # Column widths + filter + freeze
+        for col, w in enumerate(col_widths, 1):
+            ws.column_dimensions[get_column_letter(col)].width = w
+        ws.auto_filter.ref = f'A2:{get_column_letter(n_cols)}{len(rows)+2}'
+        ws.freeze_panes    = 'A3'
+
+        # Print settings
+        ws.page_setup.orientation  = 'landscape'
+        ws.page_setup.fitToPage    = True
+        ws.page_setup.fitToWidth   = 1
+        ws.page_setup.fitToHeight  = 0
+        ws.page_setup.paperSize    = 9
+        ws.print_title_rows        = '1:2'
+        ws.page_margins.left = ws.page_margins.right  = 0.5
+        ws.page_margins.top  = ws.page_margins.bottom = 0.6
+        ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    # ── Build workbook ───────────────────────────────────
+    wb = Workbook()
+
+    # ── Summary sheet ────────────────────────────────────
+    ws_sum = wb.active
+    ws_sum.title = 'Summary'
+
+    # Summary title
+    ws_sum.merge_cells('A1:H1')
+    tc = ws_sum['A1']
+    tc.value     = f'Moil Primary School — IT Asset Summary    Printed {today}'
+    tc.font      = Font(name='Calibri', bold=True, size=13, color=HEADER_FG)
+    tc.fill      = PatternFill('solid', fgColor=GREEN)
+    tc.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws_sum.row_dimensions[1].height = 28
+
+    # Summary header
+    sum_hdrs = ['Device Type', 'Total', 'Available', 'Assigned',
+                'Maintenance', 'Retired', 'Trolley / Location', '']
+    sum_hdr_fill = PatternFill('solid', fgColor=GREEN)
+    for col, h in enumerate(sum_hdrs, 1):
+        cell = ws_sum.cell(row=2, column=col, value=h)
+        cell.fill      = sum_hdr_fill
+        cell.font      = Font(name='Calibri', bold=True, size=10, color=HEADER_FG)
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border    = border
+    ws_sum.row_dimensions[2].height = 18
+
+    grand_total = 0
+    for i, dtype in enumerate(all_types):
+        rows_t = by_type[dtype]
+        rn     = i + 3
+        avail  = sum(1 for r in rows_t if (r['status'] or '') == 'available')
+        assgn  = sum(1 for r in rows_t if (r['status'] or '') == 'assigned')
+        maint  = sum(1 for r in rows_t if (r['status'] or '') == 'maintenance')
+        retrd  = sum(1 for r in rows_t if (r['status'] or '') == 'retired')
+        grand_total += len(rows_t)
+
+        # Unique trolleys for this type
+        trolleys = sorted({r['trolley'] for r in rows_t
+                           if r['trolley']})
+        troll_str = ', '.join(trolleys) if trolleys else '—'
+
+        alt = PatternFill('solid', fgColor=ALT_ROW if i % 2 else WHITE)
+        accent = TAB_COLOURS.get(dtype, DEFAULT_TAB)
+
+        for col, val in enumerate(
+            [dtype, len(rows_t), avail, assgn, maint, retrd, troll_str, ''], 1
+        ):
+            cell = ws_sum.cell(row=rn, column=col, value=val)
+            cell.fill   = alt
             cell.border = border
-            # Status column (col 9): colour-code
-            if col == 9 and status in STATUS_FILLS:
-                cell.fill = STATUS_FILLS[status]
-                cell.font = STATUS_FONTS[status]
-                cell.alignment = Alignment(horizontal='center', vertical='center')
-            else:
-                cell.fill = default_fill
-        ws.row_dimensions[row_num].height = 16
+            cell.font   = Font(name='Calibri', size=10,
+                               bold=(col == 1), color=accent if col == 1 else '000000')
+            cell.alignment = Alignment(
+                horizontal='center' if col != 1 and col != 7 else 'left',
+                vertical='center', indent=1 if col in (1, 7) else 0
+            )
+        ws_sum.row_dimensions[rn].height = 16
 
-    # ── Column widths ─────────────────────────────────────
-    col_widths = [12, 14, 14, 10, 26, 18, 16, 18, 12, 11,
-                  12, 14, 16, 8, 9, 6, 30]
-    for col, w in enumerate(col_widths, 1):
-        ws.column_dimensions[get_column_letter(col)].width = w
+    # Grand total row
+    total_row = len(all_types) + 3
+    ws_sum.merge_cells(f'A{total_row}:A{total_row}')
+    for col, val in enumerate(['TOTAL', grand_total, '', '', '', '', '', ''], 1):
+        cell = ws_sum.cell(row=total_row, column=col, value=val)
+        cell.font   = Font(name='Calibri', bold=True, size=11, color=HEADER_FG)
+        cell.fill   = PatternFill('solid', fgColor=GREEN)
+        cell.border = border
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws_sum.row_dimensions[total_row].height = 18
 
-    # ── Table / AutoFilter ────────────────────────────────
-    last_col = get_column_letter(len(headers))
-    last_row = len(rows) + 2
-    ws.auto_filter.ref = f'A2:{last_col}{last_row}'
+    # Summary column widths
+    for col, w in enumerate([22, 8, 11, 11, 13, 9, 38, 4], 1):
+        ws_sum.column_dimensions[get_column_letter(col)].width = w
+    ws_sum.freeze_panes = 'A3'
 
-    # ── Freeze panes (keep title + header visible) ────────
-    ws.freeze_panes = 'A3'
-
-    # ── Print settings ───────────────────────────────────
-    ws.page_setup.orientation = 'landscape'
-    ws.page_setup.fitToPage = True
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
-    ws.page_setup.paperSize = 9  # A4
-    ws.print_title_rows = '1:2'   # repeat header on every page
-    ws.page_margins.left   = 0.5
-    ws.page_margins.right  = 0.5
-    ws.page_margins.top    = 0.6
-    ws.page_margins.bottom = 0.6
-    ws.sheet_properties.pageSetUpPr.fitToPage = True
-
-    # ── Summary row at bottom ─────────────────────────────
-    summary_row = last_row + 2
-    ws.cell(row=summary_row, column=1,
-            value=f'Total devices: {len(rows)}').font = Font(
-                name='Calibri', bold=True, size=10, color=GREEN)
+    # ── One sheet per device type ─────────────────────────
+    for dtype in all_types:
+        # Excel sheet name max 31 chars
+        safe_name = dtype[:31]
+        ws_t = wb.create_sheet(title=safe_name)
+        accent = TAB_COLOURS.get(dtype, DEFAULT_TAB)
+        write_sheet(ws_t, by_type[dtype], dtype, accent)
 
     out = io.BytesIO()
     wb.save(out)
     out.seek(0)
-    filename = f'Moil_IT_Assets_{dt.date.today().strftime("%Y%m%d")}.xlsx'
+    filename = f'Moil_IT_Assets_{today_str}.xlsx'
     return Response(
         out.getvalue(),
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
