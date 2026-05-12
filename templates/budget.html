@@ -161,6 +161,13 @@
     </div>
     <div class="b-chart-body"><canvas id="chart-location"></canvas></div>
   </div>
+  <div class="b-chart-card">
+    <div class="b-chart-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
+      Monthly Spend
+    </div>
+    <div class="b-chart-body"><canvas id="chart-monthly"></canvas></div>
+  </div>
 </div>
 
 <!-- ── Category breakdown ─────────────────────────────────────────────────── -->
@@ -475,6 +482,42 @@
     });
   } else {
     document.getElementById('chart-location').parentElement.innerHTML =
+      '<div class="b-chart-empty">No data for this period</div>';
+  }
+
+  // Monthly line chart
+  const monthLabels = {{ month_labels | safe }};
+  const monthData = {{ month_data | safe }};
+  if (monthData.some(d => d > 0)) {
+    new Chart(document.getElementById('chart-monthly'), {
+      type: 'line',
+      data: {
+        labels: monthLabels,
+        datasets: [{
+          data: monthData,
+          borderColor: palette[0],
+          backgroundColor: palette[0] + '20',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: { ...defTooltip, callbacks: { label: c => ' ' + fmtFull(c.raw) } }
+        },
+        scales: {
+          x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
+          y: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true }
+        },
+        responsive: true, maintainAspectRatio: false
+      }
+    });
+  } else {
+    document.getElementById('chart-monthly').parentElement.innerHTML =
       '<div class="b-chart-empty">No data for this period</div>';
   }
 })();

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div>
+      <h2>{{ title }}</h2>
+      <p class="panel-subtitle">Set access permissions, email details and login credentials for the account.</p>
+    </div>
+    <div class="role-summary">
+      <span class="role-chip role-{{ user.role if user else 'viewer' }}">{{ (user.role|replace('_', ' ')|title) if user else 'New user' }}</span>
+    </div>
+  </div>
+
+  <form method="post">
+    <div class="form-section-title">Account information</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="username">Username *</label>
+        <input type="text" id="username" name="username" value="{{ user.username if user else '' }}" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password{% if user %} (leave blank to keep current){% else %} *{% endif %}</label>
+        <input type="password" id="password" name="password"{% if not user %} required{% endif %}>
+      </div>
+      <div class="form-group full-width">
+        <label for="role">Role *</label>
+        <select id="role" name="role" required>
+          <option value="viewer"{% if user and user.role == 'viewer' %} selected{% endif %}>Viewer</option>
+          <option value="staff"{% if user and user.role == 'staff' %} selected{% endif %}>Staff</option>
+          <option value="business_manager"{% if user and user.role == 'business_manager' %} selected{% endif %}>Business Manager</option>
+          <option value="admin"{% if user and user.role == 'admin' %} selected{% endif %}>Admin</option>
+        </select>
+      </div>
+      <div class="form-group full-width">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ user.email if user else '' }}">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('users') }}" class="btn btn-outline">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save user</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -13,6 +13,62 @@
 </div>
 {% endif %}
 
+<div class="dashboard-hero">
+  <div class="hero-copy">
+    <span class="hero-tag">Live overview</span>
+    <h2>School budget & asset performance</h2>
+    <p>Monitor device status, software renewals and maintenance alerts in one elegant dashboard.</p>
+  </div>
+  <div class="hero-counters">
+    <div class="hero-counter hero-counter-blue">
+      <div class="hero-counter-label">Total assets</div>
+      <div class="hero-counter-value">{{ total }}</div>
+    </div>
+    <div class="hero-counter hero-counter-green">
+      <div class="hero-counter-label">Available</div>
+      <div class="hero-counter-value">{{ available }}</div>
+    </div>
+    <div class="hero-counter hero-counter-orange">
+      <div class="hero-counter-label">Maintenance</div>
+      <div class="hero-counter-value">{{ in_maint }}</div>
+    </div>
+    <div class="hero-counter hero-counter-red">
+      <div class="hero-counter-label">Alerts</div>
+      <div class="hero-counter-value">{{ total_alerts }}</div>
+    </div>
+  </div>
+  <div class="hero-budget-card">
+    <div class="hero-budget-header">
+      <div>
+        <div class="hero-budget-title">Annual budget</div>
+        {% if budget_target %}
+        <div class="hero-budget-meta">${{ '{:,.0f}'.format(budget_target) }}</div>
+        {% else %}
+        <div class="hero-budget-meta">Not set</div>
+        {% endif %}
+      </div>
+      {% if budget_pct is not none %}
+      <div class="hero-budget-pill">{{ budget_pct }}%</div>
+      {% endif %}
+    </div>
+    <div class="budget-progress-track">
+      <div class="budget-progress-bar" style="width: {{ budget_pct or 0 }}%"></div>
+    </div>
+    <div class="hero-budget-footer">
+      <span>Spent: {{ fmt_currency(paid_total) }}</span>
+      {% if budget_target %}
+        {% if budget_target > paid_total %}
+        <span>${{ '{:,.0f}'.format(budget_target - paid_total) }} remaining</span>
+        {% else %}
+        <span>$0 remaining</span>
+        {% endif %}
+      {% else %}
+      <span>Set target to track</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 <!-- Stat Cards -->
 <div class="stat-grid">
   <a href="{{ url_for('devices') }}" class="stat-card stat-card-link">
@@ -68,6 +124,20 @@
     <span>Export</span>
   </a>
 </div>
+
+{% if notifications %}
+<div class="dash-section">
+  <h3>Notifications</h3>
+  <div class="notifications-list">
+    {% for n in notifications %}
+    <div class="notification-item">
+      <p>{{ n.message }}</p>
+      <a href="{{ url_for('mark_read', notif_id=n.id) }}" class="btn btn-sm">Mark as Read</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 <div class="dash-row">
 

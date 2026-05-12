@@ -2,11 +2,31 @@ from flask import Flask, render_template, request, redirect, url_for, flash, g, 
 import sqlite3, csv, io, json, os, shutil, threading, time, re, subprocess
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from db import get_db, init_db, DB_PATH
 
 app = Flask(__name__)
 app.secret_key = 'moil-primary-it-tracker-2026'
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB max upload
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin):
+    def __init__(self, id, username, role):
+        self.id = id
+        self.username = username
+        self.role = role
+
+@login_manager.user_loader
+def load_user(user_id):
+    db = get_db()
+    user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    if user:
+        return User(user['id'], user['username'], user['role'])
+    return None
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'invoices')
 IMPORT_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads', 'imports')
@@ -202,11 +222,42 @@ def _import_clean_float(v):
 def _import_clean_date(v):
     if not v:
         return None
-    for fmt in ('%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d', '%d-%m-%Y', '%d %b %Y', '%d %B %Y'):
+    if isinstance(v, (datetime, date)):
+        return v.date().isoformat()
+
+    s = str(v).strip()
+    if not s:
+        return None
+    s = s.replace('\u00A0', ' ').strip()
+    if s.lower() in ('n/a', 'na', 'none', 'unknown', '--', '-'):
+        return None
+
+    # Normalize separators and remove ordinal suffixes
+    s = re.sub(r'(?<=\d)(st|nd|rd|th)(?=\b)', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'[\.\-]', '/', s)
+    s = re.sub(r'\s+', ' ', s).strip()
+
+    patterns = [
+        '%d/%m/%Y', '%d/%m/%y', '%d/%m/%Y', '%d/%b/%Y', '%d/%B/%Y',
+        '%Y/%m/%d', '%Y/%b/%d', '%Y/%B/%d',
+        '%B %d %Y', '%b %d %Y',
+        '%d %B %Y', '%d %b %Y',
+    ]
+
+    for fmt in patterns:
         try:
-            return datetime.strptime(str(v).strip(), fmt).strftime('%Y-%m-%d')
+            return datetime.strptime(s, fmt).strftime('%Y-%m-%d')
         except Exception:
             pass
+
+    # Some values may have a slash/dash after the month name, e.g. March 23-2026
+    s_norm = s.replace('/', ' ').replace('-', ' ')
+    for fmt in ('%B %d %Y', '%b %d %Y', '%d %B %Y', '%d %b %Y', '%Y %m %d'):
+        try:
+            return datetime.strptime(s_norm, fmt).strftime('%Y-%m-%d')
+        except Exception:
+            pass
+
     return None
 
 
@@ -222,7 +273,7 @@ def _import_clean_condition(v):
     return 'Good'
 
 DEVICE_TYPES = ['Student Laptop','Staff Laptop','Teacher Laptop','Desktop PC',
-                'New PC Lab PC','Monitor','iPad','Other']
+                'Lenovo Mini PC','Monitor','iPad','Other']
 MAKES = ['Dell','Lenovo','Apple','HP','Acer','Samsung','Philips','Microsoft','Other']
 STATUSES = ['assigned','available','maintenance','retired']
 CONDITIONS = ['New','Excellent','Good','Fair','Poor']
@@ -259,6 +310,38 @@ FURNITURE_STATUSES = ['active','in storage','disposed','on loan']
 WARRANTY_WARN_DAYS = 90
 LICENCE_WARN_DAYS = 60
 DEVICE_AGE_WARN_YEARS = 5
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+        if user and check_password_hash(user['password_hash'], password):
+            user_obj = User(user['id'], user['username'], user['role'])
+            login_user(user_obj)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+        flash('Invalid username or password')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/notifications/mark_read/<int:notif_id>')
+@login_required
+def mark_read(notif_id):
+    db = get_db()
+    db.execute('UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?', (notif_id, current_user.id))
+    db.commit()
+    return redirect(request.referrer or url_for('dashboard'))
 
 
 @app.before_request
@@ -335,6 +418,7 @@ app.jinja_env.globals.update(
     is_expired=is_expired,
     is_expiring_soon=is_expiring_soon,
     today=today,
+    current_user=current_user,
     WARRANTY_WARN_DAYS=WARRANTY_WARN_DAYS,
     LICENCE_WARN_DAYS=LICENCE_WARN_DAYS,
     DEVICE_TYPES=DEVICE_TYPES,
@@ -360,6 +444,7 @@ app.jinja_env.globals.update(
 # ─── Dashboard ────────────────────────────────────────────────────────────────
 
 @app.route('/')
+@login_required
 def dashboard():
     db = g.db
     devices = db.execute("SELECT * FROM devices").fetchall()
@@ -384,6 +469,32 @@ def dashboard():
     for t in DEVICE_TYPES:
         type_counts[t] = sum(1 for d in devices if d['device_type'] == t)
 
+    year = date.today().year
+    invoices = db.execute("SELECT * FROM invoices WHERE strftime('%Y', date)=?", (str(year),)).fetchall()
+    paid_total = sum(r['amount'] for r in invoices if r['payment_status'] == 'paid')
+    tgt_row = db.execute("SELECT * FROM budget_targets WHERE year=?", (year,)).fetchone()
+    budget_target = tgt_row['target'] if tgt_row else None
+    budget_pct = round(paid_total / budget_target * 100, 1) if budget_target else None
+    if budget_pct is not None:
+        budget_pct = min(budget_pct, 999.9)
+
+    # Create notifications for alerts
+    for d in warranty_expiring:
+        msg = f"Warranty for {d['asset_tag']} expires soon ({fmt_date(d['warranty_expiry'])})"
+        existing = db.execute('SELECT id FROM notifications WHERE user_id = ? AND message = ?', (current_user.id, msg)).fetchone()
+        if not existing:
+            db.execute('INSERT INTO notifications (user_id, message) VALUES (?, ?)', (current_user.id, msg))
+
+    for l in lic_expiring:
+        msg = f"Licence for {l['software']} expires soon ({fmt_date(l['renewal_date'])})"
+        existing = db.execute('SELECT id FROM notifications WHERE user_id = ? AND message = ?', (current_user.id, msg)).fetchone()
+        if not existing:
+            db.execute('INSERT INTO notifications (user_id, message) VALUES (?, ?)', (current_user.id, msg))
+
+    db.commit()
+
+    notifications = db.execute('SELECT * FROM notifications WHERE user_id = ? AND read = 0 ORDER BY created_at DESC', (current_user.id,)).fetchall()
+
     return render_template('dashboard.html',
         total=total, assigned=assigned, available=available,
         in_maint=in_maint, retired=retired,
@@ -392,12 +503,17 @@ def dashboard():
         type_counts=type_counts,
         recent_maintenance=maintenance,
         licences=licences,
+        notifications=notifications,
+        budget_target=budget_target,
+        paid_total=paid_total,
+        budget_pct=budget_pct,
     )
 
 
 # ─── Devices ──────────────────────────────────────────────────────────────────
 
 @app.route('/devices')
+@login_required
 def devices():
     db = g.db
     search = request.args.get('q', '').strip()
@@ -942,7 +1058,7 @@ def export_devices_xlsx():
         'Teacher Laptop':  '6A1B9A',
         'Staff Laptop':    '4527A0',
         'iPad':            '00695C',
-        'New PC Lab PC':   '2E7D32',
+        'Lenovo Mini PC':  '2E7D32',
         'Desktop PC':      '4E342E',
         'Monitor':         '37474F',
     }
@@ -969,7 +1085,7 @@ def export_devices_xlsx():
 
     # ── Group by device type ─────────────────────────────
     type_order = ['Student Laptop', 'Teacher Laptop', 'Staff Laptop',
-                  'iPad', 'New PC Lab PC', 'Desktop PC', 'Monitor']
+                  'iPad', 'Lenovo Mini PC', 'Desktop PC', 'Monitor']
     by_type = defaultdict(list)
     for r in all_rows:
         by_type[r['device_type'] or 'Other'].append(r)
@@ -1391,6 +1507,58 @@ def export_backup_manual():
     return redirect(url_for('export'))
 
 
+@app.route('/export/pdf')
+@login_required
+def export_pdf():
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from io import BytesIO
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+    story.append(Paragraph("Moil Primary School Asset Report", styles['Title']))
+    story.append(Spacer(1, 12))
+    # Devices
+    story.append(Paragraph("Devices", styles['Heading2']))
+    devices = db.execute("SELECT asset_tag, device_type, assigned_to, status FROM devices LIMIT 20").fetchall()
+    data = [['Asset Tag', 'Type', 'Assigned To', 'Status']]
+    for d in devices:
+        data.append([d['asset_tag'], d['device_type'], d['assigned_to'] or '', d['status']])
+    table = Table(data)
+    table.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), '#CCCCCC'),
+                                ('TEXTCOLOR', (0,0), (-1,0), '#000000'),
+                                ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+                                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                                ('FONTSIZE', (0,0), (-1,0), 12),
+                                ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                                ('BACKGROUND', (0,1), (-1,-1), '#EEEEEE'),
+                                ('GRID', (0,0), (-1,-1), 1, '#000000')]))
+    story.append(table)
+    story.append(Spacer(1, 12))
+    # Licences
+    story.append(Paragraph("Licences", styles['Heading2']))
+    licences = db.execute("SELECT software, seats, renewal_date FROM licences LIMIT 10").fetchall()
+    data = [['Software', 'Seats', 'Renewal Date']]
+    for l in licences:
+        data.append([l['software'], str(l['seats']), fmt_date(l['renewal_date'])])
+    table2 = Table(data)
+    table2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), '#CCCCCC'),
+                                 ('TEXTCOLOR', (0,0), (-1,0), '#000000'),
+                                 ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+                                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                                 ('FONTSIZE', (0,0), (-1,0), 12),
+                                 ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                                 ('BACKGROUND', (0,1), (-1,-1), '#EEEEEE'),
+                                 ('GRID', (0,0), (-1,-1), 1, '#000000')]))
+    story.append(table2)
+    doc.build(story)
+    buffer.seek(0)
+    return Response(buffer.getvalue(), mimetype='application/pdf', headers={"Content-Disposition": "attachment; filename=asset_report.pdf"})
+
+
 # ─── Budget / Invoices ────────────────────────────────────────────────────────
 
 @app.route('/budget')
@@ -1725,6 +1893,84 @@ def furniture_delete(id):
     return redirect(url_for('furniture'))
 
 
+@app.route('/users')
+@login_required
+def users():
+    if current_user.role != 'admin':
+        abort(403)
+    users_list = g.db.execute('SELECT * FROM users ORDER BY username').fetchall()
+    role_counts = {
+        'admin': 0,
+        'business_manager': 0,
+        'staff': 0,
+        'viewer': 0,
+    }
+    for u in users_list:
+        role = u['role'] or 'viewer'
+        role_counts[role] = role_counts.get(role, 0) + 1
+    return render_template('users.html', users=users_list, role_counts=role_counts)
+
+@app.route('/user/new', methods=['GET', 'POST'])
+@login_required
+def user_new():
+    if current_user.role != 'admin':
+        abort(403)
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        role = request.form['role']
+        email = request.form.get('email', '')
+        if g.db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone():
+            flash('Username already exists.', 'error')
+        else:
+            g.db.execute('INSERT INTO users (username, password_hash, role, email) VALUES (?, ?, ?, ?)',
+                         (username, generate_password_hash(password), role, email))
+            g.db.commit()
+            flash('User added.', 'success')
+            return redirect(url_for('users'))
+    return render_template('user_form.html', user=None, title='Add User')
+
+@app.route('/user/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def user_edit(id):
+    if current_user.role != 'admin':
+        abort(403)
+    user = g.db.execute('SELECT * FROM users WHERE id = ?', (id,)).fetchone()
+    if not user:
+        abort(404)
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form.get('password')
+        role = request.form['role']
+        email = request.form.get('email', '')
+        if g.db.execute('SELECT id FROM users WHERE username = ? AND id != ?', (username, id)).fetchone():
+            flash('Username already exists.', 'error')
+        else:
+            if password:
+                g.db.execute('UPDATE users SET username = ?, password_hash = ?, role = ?, email = ? WHERE id = ?',
+                             (username, generate_password_hash(password), role, email, id))
+            else:
+                g.db.execute('UPDATE users SET username = ?, role = ?, email = ? WHERE id = ?',
+                             (username, role, email, id))
+            g.db.commit()
+            flash('User updated.', 'success')
+            return redirect(url_for('users'))
+    return render_template('user_form.html', user=user, title='Edit User')
+
+@app.route('/user/<int:id>/delete', methods=['POST'])
+@login_required
+def user_delete(id):
+    if current_user.role != 'admin':
+        abort(403)
+    if id == current_user.id:
+        flash('Cannot delete yourself.', 'error')
+    else:
+        g.db.execute('DELETE FROM users WHERE id = ?', (id,))
+        g.db.commit()
+        flash('User deleted.', 'info')
+    return redirect(url_for('users'))
+
+
 def _save_furniture(id):
     f = request.form
     db = g.db
@@ -1799,6 +2045,12 @@ def _backup_worker():
 
 if __name__ == '__main__':
     init_db()
+    # Seed default admin user if none exist
+    db = get_db()
+    if not db.execute('SELECT id FROM users LIMIT 1').fetchone():
+        db.execute('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)', ('admin', generate_password_hash('admin123'), 'admin'))
+        db.commit()
+    db.close()
     t = threading.Thread(target=_backup_worker, daemon=True)
     t.start()
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    app.run(debug=True, port=5001, host='0.0.0.0')

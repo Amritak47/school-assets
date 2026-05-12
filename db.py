@@ -159,6 +159,23 @@ CREATE TABLE IF NOT EXISTS furniture (
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'viewer',
+    email TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id),
+    message TEXT NOT NULL,
+    read INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 
@@ -374,7 +391,7 @@ def _seed(conn):
 
     for p in data.get('pclab', []):
         devices.append((
-            p['asset_tag'], p['serial'], 'New PC Lab PC', 'Lenovo', p['model'],
+            p['asset_tag'], p['serial'], 'Lenovo Mini PC', 'Lenovo', p['model'],
             None, p['location'],
             'available',
             p['condition'] or 'New', 'Windows 11', None,

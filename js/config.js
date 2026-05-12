@@ -1,7 +1,7 @@
 const CFG = {
   DEVICE_TYPES: [
     'Student Laptop','Staff Laptop','Teacher Laptop',
-    'Desktop PC','New PC Lab PC','Monitor','iPad','Other'
+    'Desktop PC','Lenovo Mini PC','Monitor','iPad','Other'
   ],
   MAKES: ['Dell','Lenovo','Apple','HP','Acer','Samsung','Philips','Microsoft','Other'],
   STATUSES: ['assigned','available','maintenance','retired'],

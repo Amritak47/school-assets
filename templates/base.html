@@ -16,7 +16,10 @@
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">
-        <!-- Moil Primary School "We Care" people logo, simplified -->
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Moil Primary School logo"
+             onload="this.nextElementSibling.style.display='none'"
+             onerror="this.style.display='none'" />
+        <!-- Fallback icon if the logo file is missing -->
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
           <circle cx="18" cy="18" r="18" fill="rgba(255,255,255,0.15)"/>
           <!-- centre figure (dark) -->
@@ -86,6 +89,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export / Backup
       </a>
+
+      {% if current_user.role == 'admin' %}
+      <div class="nav-section">Admin</div>
+      <a href="{{ url_for('users') }}" class="nav-link {% if 'user' in request.endpoint %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Users
+      </a>
+      {% endif %}
     </nav>
 
     <div class="sidebar-footer">
@@ -101,6 +112,12 @@
       </button>
       <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
       <div class="topbar-actions">
+        {% if current_user.is_authenticated %}
+          <div class="user-info">
+            <span>{{ current_user.username }} ({{ current_user.role }})</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm">Logout</a>
+          </div>
+        {% endif %}
         {% block topbar_actions %}{% endblock %}
       </div>
     </header>
