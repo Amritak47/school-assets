@@ -1,14 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 200">
   <defs>
-    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1B5E20"/>
-      <stop offset="100%" stop-color="#6CB33F"/>
-    </linearGradient>
+    <!-- Top arc: left→right via top (CCW small arc) — text reads correctly -->
+    <path id="a-top" d="M 16,100 A 84,84 0 0,0 184,100"/>
+    <!-- Bottom arc: right→left via bottom (CCW small arc) — text string must be reversed -->
+    <path id="a-bot" d="M 184,100 A 84,84 0 0,0 16,100"/>
   </defs>
-  <circle cx="60" cy="60" r="58" fill="#E8F5E9" stroke="#6CB33F" stroke-width="4"/>
-  <path d="M60 22 L40 52 L80 52 Z" fill="url(#grad)"/>
-  <circle cx="60" cy="38" r="8" fill="#1B5E20"/>
-  <path d="M42 70 C46 80, 54 88, 60 88 C66 88, 74 80, 78 70" stroke="#1B5E20" stroke-width="6" fill="none" stroke-linecap="round"/>
-  <rect x="36" y="48" width="48" height="8" rx="4" fill="#1B5E20"/>
-  <path d="M30 80 H90" stroke="#6CB33F" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Outer dark green ring -->
+  <circle cx="100" cy="100" r="98" fill="#1B5E20"/>
+  <!-- White separator -->
+  <circle cx="100" cy="100" r="75" fill="#ffffff"/>
+  <!-- Pale green inner -->
+  <circle cx="100" cy="100" r="73" fill="#EBF5EB"/>
+
+  <!-- MOIL — top arc, reads left-to-right -->
+  <text font-size="23" font-weight="900"
+        font-family="'Arial Black', Impact, 'Franklin Gothic Heavy', Arial, sans-serif"
+        fill="#ffffff" letter-spacing="10">
+    <textPath href="#a-top" xlink:href="#a-top" startOffset="50%" text-anchor="middle">MOIL</textPath>
+  </text>
+
+  <!-- PRIMARY SCHOOL — bottom arc.
+       String is REVERSED so it reads correctly left-to-right for the viewer. -->
+  <text font-size="10" font-weight="700"
+        font-family="Arial, Helvetica, sans-serif"
+        fill="#ffffff" letter-spacing="1.8">
+    <textPath href="#a-bot" xlink:href="#a-bot" startOffset="50%" text-anchor="middle">LOOHCS  YRAMIRP</textPath>
+  </text>
+
+  <!-- ═══════════════════════════════
+       Three people figures
+  ═══════════════════════════════ -->
+
+  <!-- Centre person — dark green, tallest -->
+  <circle cx="100" cy="51" r="9.5" fill="#1B5E20"/>
+  <!-- body/torso -->
+  <path d="M88,64 C91,60 109,60 112,64 L110,80 L100,77 L90,80 Z" fill="#1B5E20"/>
+  <!-- arms -->
+  <line x1="77" y1="58" x2="88"  y2="65" stroke="#1B5E20" stroke-width="5.5" stroke-linecap="round"/>
+  <line x1="112" y1="65" x2="123" y2="58" stroke="#1B5E20" stroke-width="5.5" stroke-linecap="round"/>
+  <!-- legs -->
+  <line x1="91"  y1="80" x2="82"  y2="101" stroke="#1B5E20" stroke-width="5"   stroke-linecap="round"/>
+  <line x1="109" y1="80" x2="118" y2="101" stroke="#1B5E20" stroke-width="5"   stroke-linecap="round"/>
+
+  <!-- Left person — lime green -->
+  <circle cx="67" cy="61" r="7.5" fill="#6CB33F"/>
+  <path d="M57,72 C59,68 76,68 78,72 L76,83 L67,80 L58,83 Z" fill="#6CB33F"/>
+  <line x1="48"  y1="66" x2="57"  y2="73" stroke="#6CB33F" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="78"  y1="73" x2="86"  y2="66" stroke="#6CB33F" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="59"  y1="83" x2="51"  y2="101" stroke="#6CB33F" stroke-width="4"  stroke-linecap="round"/>
+  <line x1="75"  y1="83" x2="81"  y2="101" stroke="#6CB33F" stroke-width="4"  stroke-linecap="round"/>
+
+  <!-- Right person — lime green -->
+  <circle cx="133" cy="61" r="7.5" fill="#6CB33F"/>
+  <path d="M122,72 C124,68 141,68 143,72 L141,83 L133,80 L124,83 Z" fill="#6CB33F"/>
+  <line x1="114" y1="66" x2="122" y2="73" stroke="#6CB33F" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="143" y1="73" x2="152" y2="66" stroke="#6CB33F" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="125" y1="83" x2="119" y2="101" stroke="#6CB33F" stroke-width="4"  stroke-linecap="round"/>
+  <line x1="141" y1="83" x2="149" y2="101" stroke="#6CB33F" stroke-width="4"  stroke-linecap="round"/>
+
+  <!-- WE CARE section -->
+  <line x1="56" y1="109" x2="144" y2="109" stroke="#2E7D32" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="100" y="122" text-anchor="middle" font-size="13" font-weight="800"
+        font-family="Arial, Helvetica, sans-serif" fill="#1B5E20" letter-spacing="3">WE CARE</text>
+  <line x1="56" y1="128" x2="144" y2="128" stroke="#2E7D32" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

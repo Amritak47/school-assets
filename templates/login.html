@@ -1,217 +1,570 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Moil Primary School Asset Tracker</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body {
-            background: linear-gradient(135deg, #1B5E20 0%, #4CAF50 50%, #81C784 100%);
-            background-attachment: fixed;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="3" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="50" r="1.5" fill="rgba(255,255,255,0.08)"/></svg>') repeat;
-            opacity: 0.5;
-            animation: float 20s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.8s ease-out;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .login-logo {
-            margin-bottom: 20px;
-        }
-        .login-logo img {
-            width: 96px;
-            height: 96px;
-            object-fit: contain;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.8);
-            padding: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        }
-        .login-logo svg {
-            width: 80px;
-            height: 80px;
-        }
-        .login-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1B5E20;
-            margin-bottom: 10px;
-        }
-        .login-subtitle {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-        .form-group input:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-            outline: none;
-        }
-        .error-message {
-            color: #f44336;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
-        }
-        .login-footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
-        }
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-        .error {
-            background: #ffebee;
-            color: #c62828;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 4px solid #c62828;
-        }
-        @media (max-width: 480px) {
-            .login-container {
-                margin: 20px;
-                padding: 30px 20px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Moil Primary School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      background: #F0F4F0;
+    }
+
+    /* ── Split wrapper ── */
+    .login-wrap {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* ════════════════════════════════
+       LEFT — Brand panel
+    ════════════════════════════════ */
+    .brand-panel {
+      flex: 0 0 440px;
+      background: linear-gradient(155deg, #1B5E20 0%, #2E7D32 45%, #388E3C 75%, #4CAF50 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px 44px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* decorative rings */
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.07);
+      top: -140px; right: -160px;
+      pointer-events: none;
+    }
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      width: 360px; height: 360px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.05);
+      bottom: -110px; left: -110px;
+      pointer-events: none;
+    }
+
+    .brand-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Logo block */
+    .brand-logo-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .brand-logo-ring {
+      width: 68px; height: 68px;
+      background: rgba(255,255,255,0.13);
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+      flex-shrink: 0;
+    }
+    .brand-logo-ring img {
+      width: 48px; height: 48px;
+      object-fit: contain;
+    }
+    .brand-name-stack { color: #fff; }
+    .brand-name-main {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .brand-name-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Hero text */
+    .brand-hero {
+      margin-bottom: 48px;
+    }
+    .brand-hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      color: rgba(255,255,255,0.85);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .brand-hero-tag span {
+      width: 5px; height: 5px;
+      background: #A5D6A7;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .brand-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .brand-hero p {
+      font-size: 15px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.65;
+      max-width: 300px;
+    }
+
+    /* Feature list */
+    .brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .brand-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-feature-icon {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .brand-feature-icon svg {
+      width: 15px; height: 15px;
+      stroke: rgba(255,255,255,0.85);
+    }
+    .brand-feature-text {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Bottom credit */
+    .brand-footer {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      color: rgba(255,255,255,0.38);
+    }
+
+    /* ════════════════════════════════
+       RIGHT — Form panel
+    ════════════════════════════════ */
+    .form-panel {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      background: #F8FAFC;
+    }
+
+    .form-card {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.04),
+        0 4px 6px -1px rgba(0,0,0,0.04),
+        0 20px 40px -8px rgba(0,0,0,0.09);
+      padding: 40px 36px;
+      animation: fadeUp .45s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card top logo (mobile — shows instead of brand panel) */
+    .card-logo-top {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .card-logo-img {
+      width: 64px; height: 64px;
+      background: #E8F5E9;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 12px rgba(27,94,32,0.12);
+    }
+    .card-logo-img img {
+      width: 46px; height: 46px;
+      object-fit: contain;
+    }
+    .card-logo-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1B5E20;
+    }
+    .card-logo-sub {
+      font-size: 12px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
+    /* Headings */
+    .form-heading {
+      margin-bottom: 28px;
+    }
+    .form-heading h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .form-heading p {
+      font-size: 14px;
+      color: #6B7280;
+    }
+
+    /* Flash alerts */
+    .flash-messages { margin-bottom: 20px; }
+    .flash-error {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      color: #991B1B;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+    .flash-error svg {
+      width: 16px; height: 16px;
+      stroke: #DC2626;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 7px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-wrap .field-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: #9CA3AF;
+      pointer-events: none;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111827;
+      background: #FAFAFA;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+    }
+    .field input:hover { border-color: #D1D5DB; background: #fff; }
+    .field input:focus {
+      border-color: #2E7D32;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(46,125,50,0.1);
+    }
+    .field input::placeholder { color: #C4CAD4; }
+
+    .field-error {
+      color: #DC2626;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 5px;
+    }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #2E7D32, #1B5E20);
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      margin-top: 10px;
+      box-shadow: 0 2px 10px rgba(27,94,32,0.28);
+      transition: transform .18s, box-shadow .18s, background .18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .submit-btn svg { width: 16px; height: 16px; stroke: rgba(255,255,255,0.75); }
+    .submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(27,94,32,0.32);
+      background: linear-gradient(135deg, #388E3C, #2E7D32);
+    }
+    .submit-btn:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(27,94,32,0.2); }
+
+    /* Footer note */
+    .form-note {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 12px;
+      color: #9CA3AF;
+    }
+    .form-note strong { color: #6B7280; }
+
+    /* ── Divider ── */
+    .form-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+      color: #D1D5DB;
+      font-size: 12px;
+    }
+    .form-divider::before,
+    .form-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #F3F4F6;
+    }
+
+    /* ════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════ */
+    @media (max-width: 860px) {
+      .brand-panel { flex: 0 0 340px; padding: 36px 32px; }
+      .brand-hero h1 { font-size: 26px; }
+    }
+
+    @media (max-width: 680px) {
+      .login-wrap { flex-direction: column; }
+
+      .brand-panel {
+        flex: none;
+        padding: 28px 24px 32px;
+        min-height: auto;
+      }
+      .brand-panel::before, .brand-panel::after { display: none; }
+      .brand-hero, .brand-features { display: none; }
+
+      .brand-logo-block { margin-bottom: 0; justify-content: center; }
+      .brand-name-main { font-size: 18px; }
+      .brand-footer { display: none; }
+
+      .form-panel { padding: 28px 16px 40px; align-items: flex-start; background: #F0F4F0; }
+      .form-card { border-radius: 18px; padding: 28px 22px; }
+      .card-logo-top { display: none; }
+    }
+
+    @media (max-width: 400px) {
+      .form-card { padding: 24px 18px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-logo">
-            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Moil Primary School logo" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='block'">
-            <div id="fallback-logo" style="display:none;">
-                <svg width="96" height="96" viewBox="0 0 36 36" fill="none">
-                    <circle cx="18" cy="18" r="18" fill="rgba(27,94,32,0.1)"/>
-                    <circle cx="18" cy="10" r="2.5" fill="#1B5E20"/>
-                    <path d="M18 13 L15 22 L21 22 Z" fill="#1B5E20"/>
-                    <path d="M13 18 L18 15 M23 18 L18 15" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round"/>
-                    <circle cx="18" cy="18" r="16" stroke="#6CB33F" stroke-width="1.5" fill="none"/>
-                </svg>
-            </div>
+<div class="login-wrap">
+
+  <!-- ── Left brand panel ── -->
+  <div class="brand-panel">
+    <div class="brand-inner">
+
+      <div class="brand-logo-block">
+        <div class="brand-logo-ring">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil Primary School logo"
+               onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=null;">
         </div>
-        <h1 class="login-title">Welcome Back</h1>
-        <p class="login-subtitle">Moil Primary School Asset Tracker</p>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for message in messages %}
-                        <p class="error">{{ message }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-        <form method="post" id="login-form">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
-                <div id="username-error" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-                <div id="password-error" class="error-message"></div>
-            </div>
-            <button type="submit" class="login-btn" id="login-btn">Sign In</button>
-        </form>
-        <div class="login-footer">
-            <!-- Default credentials removed for security -->
+        <div class="brand-name-stack">
+          <div class="brand-name-main">Moil Primary School</div>
+          <div class="brand-name-sub">Darwin, Northern Territory</div>
         </div>
+      </div>
+
+      <div class="brand-hero">
+        <div class="brand-hero-tag">
+          <span></span>
+          IT Asset Management
+        </div>
+        <h1>Track every asset,<br>every day.</h1>
+        <p>The all-in-one platform for managing devices, software licences, maintenance schedules and school budgets.</p>
+      </div>
+
+      <div class="brand-features">
+        <div class="brand-feature">
+          <div class="brand-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <span class="brand-feature-text">Device inventory &amp; check in/out</span>
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <span class="brand-feature-text">Software licence renewals</span>
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span class="brand-feature-text">Budget tracking &amp; invoices</span>
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <span class="brand-feature-text">Maintenance log &amp; alerts</span>
+        </div>
+      </div>
+
     </div>
-    <script>
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            let valid = true;
 
-            document.getElementById('username-error').textContent = '';
-            document.getElementById('password-error').textContent = '';
+    <div class="brand-footer">
+      &copy; {{ 2026 }} Moil Primary School &nbsp;·&nbsp; We Care
+    </div>
+  </div>
 
-            if (!username) {
-                document.getElementById('username-error').textContent = 'Username is required';
-                valid = false;
-            }
-            if (!password) {
-                document.getElementById('password-error').textContent = 'Password is required';
-                valid = false;
-            }
+  <!-- ── Right form panel ── -->
+  <div class="form-panel">
+    <div class="form-card">
 
-            if (!valid) {
-                e.preventDefault();
-            }
-        });
-    </script>
+      <!-- Logo shown only on mobile (brand panel hidden) -->
+      <div class="card-logo-top">
+        <div class="card-logo-img">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil Primary School logo"
+               onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=null;">
+        </div>
+        <div class="card-logo-name">Moil Primary School</div>
+        <div class="card-logo-sub">Darwin, Northern Territory</div>
+      </div>
+
+      <div class="form-heading">
+        <h2>Welcome back</h2>
+        <p>Sign in to IT Asset Tracker</p>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-messages">
+            {% for message in messages %}
+              <div class="flash-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="post" id="login-form" autocomplete="on">
+        <div class="field">
+          <label for="username">Username</label>
+          <div class="input-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
+          </div>
+          <div id="username-error" class="field-error"></div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+          </div>
+          <div id="password-error" class="field-error"></div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="login-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Sign In
+        </button>
+      </form>
+
+      <div class="form-note">
+        <strong>Moil Primary School</strong> · IT Asset Tracker · We Care
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const usernameErr = document.getElementById('username-error');
+    const passwordErr = document.getElementById('password-error');
+    let valid = true;
+
+    usernameErr.textContent = '';
+    passwordErr.textContent = '';
+
+    if (!username) {
+      usernameErr.textContent = 'Username is required';
+      valid = false;
+    }
+    if (!password) {
+      passwordErr.textContent = 'Password is required';
+      valid = false;
+    }
+    if (!valid) e.preventDefault();
+  });
+</script>
 </body>
 </html>

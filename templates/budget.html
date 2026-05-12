@@ -132,42 +132,39 @@
 </div>
 
 <!-- ── Charts ─────────────────────────────────────────────────────────────── -->
-<div class="b-charts-grid">
-  <div class="b-chart-card">
-    <div class="b-chart-head">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      Monthly Spending — {{ year }}
-    </div>
-    <div class="b-chart-body"><canvas id="chart-monthly"></canvas></div>
+<div class="b-chart-card b-chart-fullwidth" style="margin-bottom:16px;">
+  <div class="b-chart-head">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    Monthly Spending — {{ year }}
+    <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-weight:400">Paid invoices only</span>
   </div>
+  <div class="b-chart-body" style="height:240px;"><canvas id="chart-monthly"></canvas></div>
+</div>
+
+<div class="b-charts-grid" style="grid-template-columns:1fr 1fr;">
   <div class="b-chart-card">
     <div class="b-chart-head">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
       Spend by Category
     </div>
-    <div class="b-chart-body"><canvas id="chart-category"></canvas></div>
-  </div>
-  <div class="b-chart-card">
-    <div class="b-chart-head">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-      Spend by Vendor
-    </div>
-    <div class="b-chart-body"><canvas id="chart-vendors"></canvas></div>
+    <div class="b-chart-body" style="height:260px;"><canvas id="chart-category"></canvas></div>
   </div>
   <div class="b-chart-card">
     <div class="b-chart-head">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
       Spend by Location
     </div>
-    <div class="b-chart-body"><canvas id="chart-location"></canvas></div>
+    <div class="b-chart-body" style="height:260px;"><canvas id="chart-location"></canvas></div>
   </div>
-  <div class="b-chart-card">
-    <div class="b-chart-head">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
-      Monthly Spend
-    </div>
-    <div class="b-chart-body"><canvas id="chart-monthly"></canvas></div>
+</div>
+
+<div class="b-chart-card b-chart-fullwidth" style="margin-bottom:16px;">
+  <div class="b-chart-head">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Top Vendors by Spend
+    <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-weight:400">All invoices · {{ year }}</span>
   </div>
+  <div class="b-chart-body" style="height:220px;"><canvas id="chart-vendors"></canvas></div>
 </div>
 
 <!-- ── Category breakdown ─────────────────────────────────────────────────── -->
@@ -361,9 +358,21 @@
 <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 <script>
 (function () {
-  const palette   = ['#1B5E20','#6CB33F','#2E7D32','#81C784','#388E3C','#A5D6A7',
-                     '#F59E0B','#EF4444','#8B5CF6','#06B6D4'];
-  const gridColor = 'rgba(0,0,0,0.04)';
+  const palette   = [
+    '#1B5E20',  // school green (primary)
+    '#3B82F6',  // blue
+    '#F59E0B',  // amber
+    '#EF4444',  // red
+    '#8B5CF6',  // purple
+    '#06B6D4',  // cyan
+    '#6CB33F',  // light green
+    '#F97316',  // orange
+    '#EC4899',  // pink
+    '#14B8A6',  // teal
+    '#6366F1',  // indigo
+    '#84CC16',  // lime
+  ];
+  const gridColor = 'rgba(0,0,0,0.05)';
   const textColor = '#6B7280';
   const fmt     = v => '$' + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0));
   const fmtFull = v => '$' + v.toLocaleString('en-AU', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -374,42 +383,58 @@
     bodyColor: '#fff',
     padding: 10,
     cornerRadius: 8,
-    displayColors: false
+    displayColors: false,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1
   };
 
-  // Monthly bar
+  function emptyChart(id) {
+    const el = document.getElementById(id);
+    if (el) el.parentElement.innerHTML =
+      '<div class="b-chart-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" style="opacity:.3;display:block;margin:0 auto 8px"><path d="M3 3v18h18"/><path d="M18 17l-5-5-3 3-4-4"/></svg>No data for {{ year }}</div>';
+  }
+
+  // ── Monthly bar chart ──
   const monthRaw  = {{ month_labels | safe }};
   const monthData = {{ month_data | safe }};
   const mLabels   = monthRaw.map(m =>
     new Date(+m.slice(0,4), +m.slice(5)-1).toLocaleString('default', {month:'short'})
   );
-  new Chart(document.getElementById('chart-monthly'), {
-    type: 'bar',
-    data: {
-      labels: mLabels,
-      datasets: [{
-        data: monthData,
-        backgroundColor: monthData.map(v => v > 0 ? '#1B5E20' : '#E8F5E9'),
-        borderColor:     monthData.map(v => v > 0 ? '#154818' : '#C8E6C9'),
-        borderWidth: 1,
-        borderRadius: 5,
-        borderSkipped: false
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: { ...defTooltip, callbacks: { label: c => ' ' + fmtFull(c.raw) } }
+  if (monthData.some(v => v > 0)) {
+    new Chart(document.getElementById('chart-monthly'), {
+      type: 'bar',
+      data: {
+        labels: mLabels,
+        datasets: [{
+          label: 'Spend',
+          data: monthData,
+          backgroundColor: monthData.map(v => v > 0 ? '#1B5E20' : '#E8F5E9'),
+          borderColor:     monthData.map(v => v > 0 ? '#154818' : '#C8E6C9'),
+          borderWidth: 1,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
       },
-      scales: {
-        x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
-        y: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true }
-      },
-      responsive: true, maintainAspectRatio: false
-    }
-  });
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: { ...defTooltip, callbacks: {
+            title: (items) => mLabels[items[0].dataIndex] + ' {{ year }}',
+            label: c => '  ' + fmtFull(c.raw)
+          }}
+        },
+        scales: {
+          x: { ticks: { color: textColor, font: { size: 12, weight: '500' } }, grid: { display: false }, border: { display: false } },
+          y: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false }, beginAtZero: true }
+        },
+        responsive: true, maintainAspectRatio: false
+      }
+    });
+  } else {
+    emptyChart('chart-monthly');
+  }
 
-  // Category donut
+  // ── Category donut ──
   const catRaw = {{ by_cat_all | safe }};
   if (catRaw.length) {
     new Chart(document.getElementById('chart-category'), {
@@ -417,51 +442,22 @@
       data: {
         labels: catRaw.map(c => c[0]),
         datasets: [{ data: catRaw.map(c => c[1]), backgroundColor: palette,
-                     borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }]
+                     borderWidth: 3, borderColor: '#fff', hoverOffset: 10 }]
       },
       options: {
-        cutout: '65%',
+        cutout: '68%',
         plugins: {
-          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 10 } },
-          tooltip: { ...defTooltip, callbacks: { label: c => ` ${c.label}: ${fmtFull(c.raw)}` } }
+          legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 }, padding: 10, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } },
+          tooltip: { ...defTooltip, callbacks: { label: c => `  ${c.label}: ${fmtFull(c.raw)}` } }
         },
         responsive: true, maintainAspectRatio: false
       }
     });
   } else {
-    document.getElementById('chart-category').parentElement.innerHTML =
-      '<div class="b-chart-empty">No data for this period</div>';
+    emptyChart('chart-category');
   }
 
-  // Vendor bar (horizontal)
-  const vRaw = {{ top_vendors | safe }};
-  if (vRaw.length) {
-    new Chart(document.getElementById('chart-vendors'), {
-      type: 'bar',
-      data: {
-        labels: vRaw.map(v => v[0]),
-        datasets: [{ data: vRaw.map(v => v[1]), backgroundColor: palette,
-                     borderWidth: 0, borderRadius: 5 }]
-      },
-      options: {
-        indexAxis: 'y',
-        plugins: {
-          legend: { display: false },
-          tooltip: { ...defTooltip, callbacks: { label: c => ' ' + fmtFull(c.raw) } }
-        },
-        scales: {
-          x: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true },
-          y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
-        },
-        responsive: true, maintainAspectRatio: false
-      }
-    });
-  } else {
-    document.getElementById('chart-vendors').parentElement.innerHTML =
-      '<div class="b-chart-empty">No data for this period</div>';
-  }
-
-  // Location donut
+  // ── Location donut ──
   const locRaw = {{ by_loc | safe }};
   if (locRaw.length) {
     new Chart(document.getElementById('chart-location'), {
@@ -469,56 +465,46 @@
       data: {
         labels: locRaw.map(l => l[0]),
         datasets: [{ data: locRaw.map(l => l[1]), backgroundColor: palette,
-                     borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }]
+                     borderWidth: 3, borderColor: '#fff', hoverOffset: 10 }]
       },
       options: {
-        cutout: '65%',
+        cutout: '68%',
         plugins: {
-          legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 10 } },
-          tooltip: { ...defTooltip, callbacks: { label: c => ` ${c.label}: ${fmtFull(c.raw)}` } }
+          legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 }, padding: 10, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } },
+          tooltip: { ...defTooltip, callbacks: { label: c => `  ${c.label}: ${fmtFull(c.raw)}` } }
         },
         responsive: true, maintainAspectRatio: false
       }
     });
   } else {
-    document.getElementById('chart-location').parentElement.innerHTML =
-      '<div class="b-chart-empty">No data for this period</div>';
+    emptyChart('chart-location');
   }
 
-  // Monthly line chart
-  const monthLabels = {{ month_labels | safe }};
-  const monthData = {{ month_data | safe }};
-  if (monthData.some(d => d > 0)) {
-    new Chart(document.getElementById('chart-monthly'), {
-      type: 'line',
+  // ── Vendor horizontal bar ──
+  const vRaw = {{ top_vendors | safe }};
+  if (vRaw.length) {
+    new Chart(document.getElementById('chart-vendors'), {
+      type: 'bar',
       data: {
-        labels: monthLabels,
-        datasets: [{
-          data: monthData,
-          borderColor: palette[0],
-          backgroundColor: palette[0] + '20',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
+        labels: vRaw.map(v => v[0]),
+        datasets: [{ label: 'Spend', data: vRaw.map(v => v[1]),
+                     backgroundColor: palette, borderWidth: 0, borderRadius: 4 }]
       },
       options: {
+        indexAxis: 'y',
         plugins: {
           legend: { display: false },
-          tooltip: { ...defTooltip, callbacks: { label: c => ' ' + fmtFull(c.raw) } }
+          tooltip: { ...defTooltip, callbacks: { label: c => '  ' + fmtFull(c.raw) } }
         },
         scales: {
-          x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
-          y: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, beginAtZero: true }
+          x: { ticks: { color: textColor, callback: fmt, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false }, beginAtZero: true },
+          y: { ticks: { color: textColor, font: { size: 12 } }, grid: { display: false }, border: { display: false } }
         },
         responsive: true, maintainAspectRatio: false
       }
     });
   } else {
-    document.getElementById('chart-monthly').parentElement.innerHTML =
-      '<div class="b-chart-empty">No data for this period</div>';
+    emptyChart('chart-vendors');
   }
 })();
 </script>

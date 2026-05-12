@@ -29,6 +29,20 @@ document.querySelectorAll('.alert').forEach(el => {
   });
 })();
 
+// Notification bell toggle
+(function () {
+  const bell = document.getElementById('notif-bell');
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!bell || !dropdown) return;
+  bell.addEventListener('click', function (e) {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', function (e) {
+    if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
+  });
+})();
+
 // Searchable device picker
 document.querySelectorAll('.device-picker').forEach(picker => {
   const input = picker.querySelector('.device-picker-input');

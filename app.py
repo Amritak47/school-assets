@@ -356,6 +356,17 @@ def close_db(e=None):
         db.close()
 
 
+@app.context_processor
+def inject_notifications():
+    if current_user.is_authenticated:
+        rows = g.db.execute(
+            'SELECT * FROM notifications WHERE user_id = ? AND read = 0 ORDER BY created_at DESC LIMIT 20',
+            (current_user.id,)
+        ).fetchall()
+        return dict(nav_notifications=rows, nav_unread_count=len(rows))
+    return dict(nav_notifications=[], nav_unread_count=0)
+
+
 def today():
     return date.today().isoformat()
 
@@ -863,7 +874,11 @@ def maintenance():
         ORDER BY m.date DESC
     """).fetchall()
     devices = g.db.execute("SELECT id, asset_tag, serial_number, device_type FROM devices ORDER BY device_type, asset_tag").fetchall()
-    return render_template('maintenance.html', records=rows, devices=devices)
+    total_spend = sum(r['cost'] for r in rows if r['cost'])
+    year = date.today().year
+    year_spend = sum(r['cost'] for r in rows if r['cost'] and r['date'] and r['date'].startswith(str(year)))
+    return render_template('maintenance.html', records=rows, devices=devices,
+                           total_spend=total_spend, year_spend=year_spend)
 
 
 @app.route('/maintenance/new', methods=['GET', 'POST'])

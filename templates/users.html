@@ -4,82 +4,119 @@
 
 {% block topbar_actions %}
   <a href="{{ url_for('user_new') }}" class="btn btn-primary">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add User
   </a>
 {% endblock %}
 
 {% block content %}
-<div class="summary-grid">
-  <div class="summary-card">
-    <div class="summary-card-title">Total users</div>
-    <div class="summary-card-value">{{ users|length }}</div>
-    <div class="summary-card-note">Active accounts with login access</div>
+
+<!-- ── Stat cards ── -->
+<div class="stat-grid" style="margin-bottom: 24px;">
+
+  <div class="stat-card">
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ users|length }}</div>
+      <div class="stat-label">Total Users</div>
+    </div>
   </div>
-  <div class="summary-card">
-    <div class="summary-card-title">Admins</div>
-    <div class="summary-card-value">{{ role_counts.admin }}</div>
-    <div class="summary-card-note">Can manage users and settings</div>
+
+  <div class="stat-card {% if role_counts.admin > 0 %}card-alert{% endif %}">
+    <div class="stat-icon red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ role_counts.admin }}</div>
+      <div class="stat-label">Admins</div>
+    </div>
   </div>
-  <div class="summary-card">
-    <div class="summary-card-title">Staff</div>
-    <div class="summary-card-value">{{ role_counts.staff }}</div>
-    <div class="summary-card-note">Operational users with edit permissions</div>
+
+  <div class="stat-card">
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ role_counts.staff }}</div>
+      <div class="stat-label">Staff</div>
+    </div>
   </div>
-  <div class="summary-card">
-    <div class="summary-card-title">Viewers</div>
-    <div class="summary-card-value">{{ role_counts.viewer }}</div>
-    <div class="summary-card-note">Read-only access</div>
+
+  <div class="stat-card">
+    <div class="stat-icon teal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <div class="stat-body">
+      <div class="stat-value">{{ role_counts.viewer }}</div>
+      <div class="stat-label">Viewers</div>
+    </div>
   </div>
+
 </div>
 
-<div class="table-panel">
-  <div class="table-panel-header">
-    <div>
-      <h2 class="panel-title">User accounts</h2>
-      <p class="panel-subtitle">Review and update login access for your team.</p>
-    </div>
-    <span class="badge badge-soft">{{ users|length }} accounts</span>
+<!-- ── User table ── -->
+<div class="card">
+  <div class="card-head">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    User accounts
+    <span class="b-count-pill" style="margin-left:8px">{{ users|length }}</span>
+    <span style="margin-left:auto; font-size:12px; color:var(--text-3); font-weight:400">Review and update login access for your team</span>
   </div>
 
-  <div class="table-container">
-    <table class="data-table">
+  <div class="table-wrap">
+    <table class="table">
       <thead>
         <tr>
-          <th>Username</th>
+          <th>User</th>
           <th>Role</th>
           <th>Email</th>
           <th>Created</th>
-          <th class="text-right">Actions</th>
+          <th class="action-cell">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for user in users %}
         <tr>
           <td>
-            <div class="user-name">{{ user.username }}</div>
-            <div class="user-meta">ID {{ user.id }}</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2E7D32,#6CB33F);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">
+                {{ user.username[0]|upper }}
+              </div>
+              <div>
+                <div style="font-weight:600;color:var(--text);">{{ user.username }}</div>
+                <div style="font-size:11px;color:var(--text-3);">ID {{ user.id }}</div>
+              </div>
+            </div>
           </td>
           <td><span class="role-chip role-{{ user.role }}">{{ user.role|replace('_', ' ')|title }}</span></td>
-          <td>{{ user.email or '—' }}</td>
-          <td class="mono">{{ user.created_at[:10] }}</td>
+          <td style="color:var(--text-2);">{{ user.email or '—' }}</td>
+          <td class="mono" style="color:var(--text-2);">{{ user.created_at[:10] }}</td>
           <td class="action-cell">
-            <a href="{{ url_for('user_edit', id=user.id) }}" class="btn-icon" title="Edit">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <a href="{{ url_for('user_edit', id=user.id) }}" class="btn-icon" title="Edit user">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </a>
             {% if user.id != current_user.id %}
             <form method="post" action="{{ url_for('user_delete', id=user.id) }}" style="display:inline"
-                  onsubmit="return confirm('Delete this user?')">
-              <button class="btn-icon btn-icon-danger" title="Delete">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  onsubmit="return confirm('Delete {{ user.username }}? This cannot be undone.')">
+              <button class="btn-icon btn-icon-danger" title="Delete user">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
               </button>
             </form>
+            {% else %}
+            <span style="font-size:11px;color:var(--text-3);padding:0 8px;">(you)</span>
             {% endif %}
           </td>
         </tr>
         {% endfor %}
+
+        {% if not users %}
+        <tr><td colspan="5" class="empty-cell">No users found.</td></tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
 </div>
+
 {% endblock %}
