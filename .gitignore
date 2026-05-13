@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
-tracker.db
+# tracker.db
 assets.xlsx
 
 node_modules/
