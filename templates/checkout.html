@@ -8,16 +8,27 @@
   <!-- Check out form -->
   <div class="card">
     <div class="card-head">Check Out a Device</div>
+
+    <!-- Barcode scan strip -->
+    <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:10px 14px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h.01M7 12h.01M7 17h.01M12 7h.01M12 12h.01M12 17h.01M17 7h.01M17 12h.01M17 17h.01"/></svg>
+      <input id="scan-input" type="text" placeholder="Scan barcode or type asset tag, then press Enter…"
+             autocomplete="off" autocorrect="off" spellcheck="false"
+             style="flex:1; border:none; background:transparent; font-size:14px; outline:none; color:var(--text);">
+    </div>
+
     <form method="post" action="{{ url_for('checkout_new') }}" class="form-inline">
       <div class="form-group">
         <label>Device *</label>
         <div class="device-picker">
-          <input type="text" class="device-picker-input" placeholder="Type to search by tag, serial, type…" autocomplete="off">
-          <input type="hidden" name="device_id" required>
+          <input id="device-picker-input" type="text" class="device-picker-input" placeholder="Type to search by tag, serial, type…" autocomplete="off">
+          <input type="hidden" name="device_id" id="device_id_input" required>
           <ul class="picker-dropdown">
             {% for d in devices %}
             <li class="picker-option"
                 data-value="{{ d['id'] }}"
+                data-tag="{{ (d['asset_tag'] or '')|upper }}"
+                data-serial="{{ (d['serial_number'] or '')|upper }}"
                 data-label="{{ (d['asset_tag'] or d['serial_number'] or '') ~ ' ' ~ d['device_type'] }}">
               <span class="picker-option-label">{{ d['asset_tag'] or d['serial_number'] or ('Device #' ~ d['id']) }}</span>
               <span class="picker-option-sub">{{ d['device_type'] }}</span>
@@ -117,4 +128,59 @@
   </table>
   {% endif %}
 </div>
+
+{% block scripts %}
+<script>
+(function() {
+  const scanInput     = document.getElementById('scan-input');
+  const pickerInput   = document.getElementById('device-picker-input');
+  const deviceIdInput = document.getElementById('device_id_input');
+  const borrowerInput = document.querySelector('input[name="borrower_name"]');
+  const options       = Array.from(document.querySelectorAll('.picker-option'));
+
+  scanInput.focus();
+
+  function matchDevice(query) {
+    const q = query.trim().toUpperCase();
+    if (!q) return null;
+    return options.find(o =>
+      o.dataset.tag === q ||
+      o.dataset.serial === q ||
+      o.dataset.label.toUpperCase().startsWith(q)
+    ) || null;
+  }
+
+  function selectOption(opt) {
+    deviceIdInput.value = opt.dataset.value;
+    pickerInput.value   = opt.querySelector('.picker-option-label').textContent.trim() +
+                          ' — ' + opt.querySelector('.picker-option-sub').textContent.trim();
+    pickerInput.style.borderColor = '#16A34A';
+    scanInput.value = '';
+    scanInput.style.background = '';
+    if (borrowerInput) { borrowerInput.focus(); borrowerInput.select(); }
+  }
+
+  scanInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const match = matchDevice(this.value);
+      if (match) {
+        selectOption(match);
+      } else {
+        this.style.color = '#DC2626';
+        setTimeout(() => { this.style.color = ''; }, 800);
+      }
+    }
+  });
+
+  scanInput.addEventListener('input', function() {
+    const match = matchDevice(this.value);
+    this.style.background = this.value.length > 2
+      ? (match ? '#F0FDF4' : '#FEF2F2')
+      : '';
+  });
+})();
+</script>
+{% endblock %}
+
 {% endblock %}
