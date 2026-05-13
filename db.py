@@ -119,6 +119,12 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT
 );
 
+CREATE TABLE IF NOT EXISTS dropdown_options (
+    key   TEXT NOT NULL,
+    value TEXT NOT NULL,
+    PRIMARY KEY (key, value)
+);
+
 CREATE TABLE IF NOT EXISTS invoices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL,
@@ -176,6 +182,16 @@ CREATE TABLE IF NOT EXISTS notifications (
     read INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity     TEXT NOT NULL,
+    entity_id  INTEGER,
+    action     TEXT NOT NULL,
+    user       TEXT,
+    summary    TEXT,
+    created_at TEXT NOT NULL
+);
 """
 
 
@@ -214,6 +230,7 @@ def _migrate(conn):
         "ALTER TABLE invoices ADD COLUMN location TEXT",
         "ALTER TABLE devices ADD COLUMN invoice_number TEXT",
         "ALTER TABLE devices ADD COLUMN trolley TEXT",
+        "ALTER TABLE checkout ADD COLUMN due_date TEXT",
     ]
     for sql in migrations:
         try:

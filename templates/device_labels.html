@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Labels — Moil Primary School</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; color: #1e293b; }
+
+    .no-print-bar {
+      background: #1e40af; color: #fff; padding: 0.75rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .no-print-bar h1 { font-size: 1rem; font-weight: 600; flex: 1; }
+    .print-btn {
+      background: #fff; color: #1e40af; border: none; border-radius: 6px;
+      padding: 0.5rem 1.25rem; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .back-link { color: #bfdbfe; text-decoration: none; font-size: 0.875rem; }
+
+    .labels-page { padding: 1.5rem; }
+    .labels-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .label {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      background: #fff;
+      break-inside: avoid;
+    }
+    .label img { width: 120px; height: 120px; display: block; margin: 0 auto 8px; }
+    .label-tag { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+    .label-type { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+    .label-model { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .labels-page { padding: 0; }
+      .labels-grid { gap: 8px; }
+      .label { border-color: #94a3b8; }
+    }
+
+    @media (max-width: 640px) {
+      .labels-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print">
+  <h1>Device Labels ({{ labels|length }} label{{ 's' if labels|length != 1 }})</h1>
+  <a href="javascript:history.back()" class="back-link">← Back</a>
+  <button class="print-btn" onclick="window.print()">
+    &#128438; Print Labels
+  </button>
+</div>
+
+<div class="labels-page">
+  <div class="labels-grid">
+    {% for item in labels %}
+    <div class="label">
+      <img src="data:image/png;base64,{{ item.qr_b64 }}" alt="QR Code">
+      <div class="label-tag">{{ item.device['asset_tag'] or item.device['serial_number'] or '—' }}</div>
+      <div class="label-type">{{ item.device['device_type'] }}</div>
+      <div class="label-model">{{ ((item.device['make'] or '') + ' ' + (item.device['model'] or ''))|trim or '—' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+</body>
+</html>

@@ -6,6 +6,10 @@
   <a href="{{ url_for('devices') }}" class="btn btn-outline">← Devices</a>
   <a href="{{ url_for('device_edit', id=device['id']) }}" class="btn btn-primary">Edit</a>
   <a href="{{ url_for('maintenance_new') }}?device_id={{ device['id'] }}" class="btn btn-outline">+ Maintenance</a>
+  <a href="{{ url_for('device_qr', id=device['id']) }}" class="btn btn-outline" title="Print QR Label">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Print Label
+  </a>
 {% endblock %}
 
 {% block content %}
@@ -150,12 +154,22 @@
 <div class="card" style="margin-top:1rem">
   <div class="card-head">Recent Check In/Out</div>
   <table class="table">
-    <thead><tr><th>Borrowed By</th><th>Date Out</th><th>Returned</th><th>Notes</th></tr></thead>
+    <thead><tr><th>Borrowed By</th><th>Date Out</th><th>Due Date</th><th>Returned</th><th>Notes</th></tr></thead>
     <tbody>
       {% for c in checkouts %}
-      <tr>
+      {% set overdue = c['due_date'] and not c['returned_at'] and is_expired(c['due_date']) %}
+      <tr{% if overdue %} style="background:#fef2f2;"{% endif %}>
         <td>{{ c['borrower_name'] or '—' }}</td>
         <td>{{ fmt_date(c['checked_out_at']) }}</td>
+        <td>
+          {% if c['due_date'] %}
+            {% if overdue %}
+              <span class="badge badge-red">{{ fmt_date(c['due_date']) }} — Overdue</span>
+            {% else %}
+              {{ fmt_date(c['due_date']) }}
+            {% endif %}
+          {% else %}—{% endif %}
+        </td>
         <td>{% if c['returned_at'] %}<span class="badge badge-green">{{ fmt_date(c['returned_at']) }}</span>{% else %}<span class="badge badge-orange">Still Out</span>{% endif %}</td>
         <td class="text-muted">{{ c['notes'] or '—' }}</td>
       </tr>

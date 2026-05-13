@@ -13,6 +13,14 @@
 </div>
 {% endif %}
 
+{% if overdue %}
+<div class="dash-alert-banner" style="background:#fef2f2; border-color:#fecaca; color:#991b1b;">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span><strong>{{ overdue|length }} overdue loan{{ 's' if overdue|length != 1 }}</strong> — device{{ 's' if overdue|length != 1 }} not returned by due date</span>
+  <a href="{{ url_for('checkout') }}" class="dash-alert-link" style="color:#991b1b;">View Check In/Out →</a>
+</div>
+{% endif %}
+
 <div class="dashboard-hero">
   <div class="hero-copy">
     <span class="hero-tag">Live overview</span>

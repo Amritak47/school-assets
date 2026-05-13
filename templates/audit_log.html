@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Audit Log{% endblock %}
+{% block page_title %}Audit Log{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-head">
+    Device Change History
+    <span class="badge badge-gray" style="font-weight:500;">{{ logs|length }} entries</span>
+  </div>
+  {% if not logs %}
+  <div class="empty-state-inline">No audit entries yet.</div>
+  {% else %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Date / Time</th>
+        <th>Action</th>
+        <th>Device ID</th>
+        <th>User</th>
+        <th>Summary</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td style="white-space:nowrap; color:#64748b; font-size:0.85rem;">
+          {{ log['created_at'][:10] }}<br>
+          <small>{{ log['created_at'][11:19] }}</small>
+        </td>
+        <td>
+          {% if log['action'] == 'create' %}
+            <span class="badge badge-green">create</span>
+          {% elif log['action'] == 'edit' %}
+            <span class="badge badge-blue">edit</span>
+          {% elif log['action'] == 'delete' %}
+            <span class="badge badge-red">delete</span>
+          {% else %}
+            <span class="badge badge-gray">{{ log['action'] }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if log['action'] != 'delete' and log['entity_id'] %}
+            <a href="{{ url_for('device_detail', id=log['entity_id']) }}">#{{ log['entity_id'] }}</a>
+          {% elif log['entity_id'] %}
+            #{{ log['entity_id'] }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td style="font-weight:500;">{{ log['user'] or '—' }}</td>
+        <td class="text-muted">{{ log['summary'] or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

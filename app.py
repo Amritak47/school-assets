@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, g, jsonify, Response, send_from_directory
-import sqlite3, csv, io, json, os, shutil, threading, time, re, subprocess
+from flask import Flask, render_template, request, redirect, url_for, flash, g, jsonify, Response, send_from_directory, abort
+import sqlite3, csv, io, json, os, shutil, threading, time, re, subprocess, base64
+import qrcode
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -312,6 +313,54 @@ LICENCE_WARN_DAYS = 60
 DEVICE_AGE_WARN_YEARS = 5
 
 
+def get_setting(key, default_list):
+    db = get_db()
+    rows = db.execute("SELECT value FROM dropdown_options WHERE key=? ORDER BY value", (key,)).fetchall()
+    db.close()
+    return [r['value'] for r in rows] if rows else default_list
+
+
+def add_setting(key, value):
+    db = get_db()
+    db.execute("INSERT OR IGNORE INTO dropdown_options (key, value) VALUES (?,?)", (key, value))
+    db.commit()
+    db.close()
+
+
+def remove_setting(key, value):
+    db = get_db()
+    db.execute("DELETE FROM dropdown_options WHERE key=? AND value=?", (key, value))
+    db.commit()
+    db.close()
+
+
+def seed_settings():
+    db = get_db()
+    defaults = {
+        'device_types':        DEVICE_TYPES,
+        'locations':           LOCATIONS,
+        'trolleys':            TROLLEYS,
+        'makes':               MAKES,
+        'funding':             FUNDING,
+        'furniture_categories':FURNITURE_CATEGORIES,
+        'maintenance_types':   MAINTENANCE_TYPES,
+        'licence_types':       LICENCE_TYPES,
+        'invoice_categories':  INVOICE_CATEGORIES,
+        'accessory_types':     ACCESSORY_TYPES,
+        'vendors':             VENDORS_LIST,
+        'conditions':          CONDITIONS,
+        'os_versions':         OS_VERSIONS,
+        'invoice_locations':   INVOICE_LOCATIONS,
+    }
+    for key, values in defaults.items():
+        count = db.execute("SELECT COUNT(*) FROM dropdown_options WHERE key=?", (key,)).fetchone()[0]
+        if count == 0:
+            for v in values:
+                db.execute("INSERT OR IGNORE INTO dropdown_options (key,value) VALUES (?,?)", (key, v))
+    db.commit()
+    db.close()
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -365,6 +414,26 @@ def inject_notifications():
         ).fetchall()
         return dict(nav_notifications=rows, nav_unread_count=len(rows))
     return dict(nav_notifications=[], nav_unread_count=0)
+
+
+@app.context_processor
+def inject_dropdown_options():
+    return dict(
+        DEVICE_TYPES=get_setting('device_types', DEVICE_TYPES),
+        LOCATIONS=get_setting('locations', LOCATIONS),
+        TROLLEYS=get_setting('trolleys', TROLLEYS),
+        MAKES=get_setting('makes', MAKES),
+        FUNDING=get_setting('funding', FUNDING),
+        FURNITURE_CATEGORIES=get_setting('furniture_categories', FURNITURE_CATEGORIES),
+        MAINTENANCE_TYPES=get_setting('maintenance_types', MAINTENANCE_TYPES),
+        LICENCE_TYPES=get_setting('licence_types', LICENCE_TYPES),
+        INVOICE_CATEGORIES=get_setting('invoice_categories', INVOICE_CATEGORIES),
+        ACCESSORY_TYPES=get_setting('accessory_types', ACCESSORY_TYPES),
+        VENDORS_LIST=get_setting('vendors', VENDORS_LIST),
+        CONDITIONS=get_setting('conditions', CONDITIONS),
+        OS_VERSIONS=get_setting('os_versions', OS_VERSIONS),
+        INVOICE_LOCATIONS=get_setting('invoice_locations', INVOICE_LOCATIONS),
+    )
 
 
 def today():
@@ -432,13 +501,9 @@ app.jinja_env.globals.update(
     current_user=current_user,
     WARRANTY_WARN_DAYS=WARRANTY_WARN_DAYS,
     LICENCE_WARN_DAYS=LICENCE_WARN_DAYS,
-    DEVICE_TYPES=DEVICE_TYPES,
-    MAKES=MAKES,
     STATUSES=STATUSES,
     CONDITIONS=CONDITIONS,
     OS_VERSIONS=OS_VERSIONS,
-    FUNDING=FUNDING,
-    LOCATIONS=LOCATIONS,
     MAINTENANCE_TYPES=MAINTENANCE_TYPES,
     LICENCE_TYPES=LICENCE_TYPES,
     VENDORS_LIST=VENDORS_LIST,
@@ -446,9 +511,7 @@ app.jinja_env.globals.update(
     INVOICE_CATEGORIES=INVOICE_CATEGORIES,
     PAYMENT_STATUSES=PAYMENT_STATUSES,
     INVOICE_LOCATIONS=INVOICE_LOCATIONS,
-    FURNITURE_CATEGORIES=FURNITURE_CATEGORIES,
     FURNITURE_STATUSES=FURNITURE_STATUSES,
-    TROLLEYS=TROLLEYS,
 )
 
 
@@ -477,7 +540,7 @@ def dashboard():
     lic_expired = [l for l in licences if is_expired(l['renewal_date'])]
 
     type_counts = {}
-    for t in DEVICE_TYPES:
+    for t in get_setting('device_types', DEVICE_TYPES):
         type_counts[t] = sum(1 for d in devices if d['device_type'] == t)
 
     year = date.today().year
@@ -506,6 +569,15 @@ def dashboard():
 
     notifications = db.execute('SELECT * FROM notifications WHERE user_id = ? AND read = 0 ORDER BY created_at DESC', (current_user.id,)).fetchall()
 
+    overdue = db.execute("""
+        SELECT c.*, d.asset_tag, d.device_type
+        FROM checkout c JOIN devices d ON c.device_id = d.id
+        WHERE c.status='out'
+          AND c.due_date IS NOT NULL
+          AND c.due_date < date('now')
+        ORDER BY c.due_date
+    """).fetchall()
+
     return render_template('dashboard.html',
         total=total, assigned=assigned, available=available,
         in_maint=in_maint, retired=retired,
@@ -518,6 +590,7 @@ def dashboard():
         budget_target=budget_target,
         paid_total=paid_total,
         budget_pct=budget_pct,
+        overdue=overdue,
     )
 
 
@@ -605,10 +678,85 @@ def device_edit(id):
 
 @app.route('/devices/<int:id>/delete', methods=['POST'])
 def device_delete(id):
+    device = g.db.execute("SELECT * FROM devices WHERE id=?", (id,)).fetchone()
+    if device:
+        log_audit('device', id, 'delete', f"Deleted {device['asset_tag'] or device['serial_number'] or str(id)}")
     g.db.execute("DELETE FROM devices WHERE id=?", (id,))
     g.db.commit()
     flash('Device deleted.', 'info')
     return redirect(url_for('devices'))
+
+
+@app.route('/devices/<int:id>/qr')
+@login_required
+def device_qr(id):
+    device = g.db.execute("SELECT * FROM devices WHERE id=?", (id,)).fetchone()
+    if not device:
+        abort(404)
+    url = request.host_url.rstrip('/') + url_for('device_detail', id=id)
+    img = qrcode.make(url)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return render_template('device_qr.html', device=device, qr_b64=b64, url=url)
+
+
+@app.route('/devices/labels')
+@login_required
+def device_labels():
+    ids = request.args.getlist('ids', type=int)
+    if not ids:
+        flash('No devices selected.', 'warning')
+        return redirect(url_for('devices'))
+    placeholders = ','.join('?' * len(ids))
+    devices = g.db.execute(f"SELECT * FROM devices WHERE id IN ({placeholders})", ids).fetchall()
+    labels = []
+    for d in devices:
+        url = request.host_url.rstrip('/') + url_for('device_detail', id=d['id'])
+        img = qrcode.make(url)
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        b64 = base64.b64encode(buf.getvalue()).decode()
+        labels.append({'device': d, 'qr_b64': b64})
+    return render_template('device_labels.html', labels=labels)
+
+
+@app.route('/devices/bulk-edit', methods=['POST'])
+@login_required
+def device_bulk_edit():
+    if current_user.role != 'admin':
+        abort(403)
+    ids = request.form.getlist('ids', type=int)
+    if not ids:
+        flash('No devices selected.', 'warning')
+        return redirect(url_for('devices'))
+    fields = {}
+    for col in ('status', 'location', 'trolley', 'condition'):
+        val = request.form.get(col, '').strip()
+        if val:
+            fields[col] = val
+    if fields:
+        now = datetime.now().isoformat()
+        sets = ', '.join(f"{k}=?" for k in fields)
+        for did in ids:
+            g.db.execute(f"UPDATE devices SET {sets}, updated_at=? WHERE id=?",
+                         list(fields.values()) + [now, did])
+            log_audit('device', did, 'edit',
+                      f"Bulk edit: {', '.join(f'{k}={v}' for k, v in fields.items())}")
+        g.db.commit()
+        flash(f"Updated {len(ids)} device(s).", 'success')
+    return redirect(url_for('devices'))
+
+
+@app.route('/audit-log')
+@login_required
+def audit_log_page():
+    if current_user.role != 'admin':
+        abort(403)
+    logs = g.db.execute(
+        "SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 500"
+    ).fetchall()
+    return render_template('audit_log.html', logs=logs)
 
 
 @app.route('/devices/import', methods=['GET', 'POST'])
@@ -713,7 +861,7 @@ def device_import():
                 device.get('model', '').strip(),
                 device.get('assigned_to', '').strip(),
                 device.get('location', '').strip(),
-                _import_clean_status(device.get('status', 'available')),
+                _import_clean_status(device.get('status', 'assigned' if device.get('assigned_to', '').strip() else 'available')),
                 _import_clean_condition(device.get('condition', 'Good')),
                 device.get('os_version', '').strip(),
                 device.get('hostname', '').strip(),
@@ -759,15 +907,31 @@ def device_import_template():
                     headers={'Content-Disposition': 'attachment; filename=device_import_template.xlsx'})
 
 
+def log_audit(entity, entity_id, action, summary):
+    user = current_user.username if current_user.is_authenticated else 'system'
+    g.db.execute(
+        "INSERT INTO audit_log (entity, entity_id, action, user, summary, created_at) VALUES (?,?,?,?,?,?)",
+        (entity, entity_id, action, user, summary, datetime.now().isoformat())
+    )
+
+
 def _save_device(id):
     f = request.form
     db = g.db
+    _assigned_to = f.get('assigned_to','').strip()
+    _raw_status  = f.get('status','available')
+    if _assigned_to:
+        _status = 'assigned'
+    elif _raw_status == 'assigned':
+        _status = 'available'
+    else:
+        _status = _raw_status
     vals = (
         f.get('asset_tag','').strip() or None,
         f.get('serial_number','').strip() or None,
         f.get('device_type',''), f.get('make',''), f.get('model','').strip(),
-        f.get('assigned_to','').strip(), f.get('location',''),
-        f.get('status','available'), f.get('condition','Good'),
+        _assigned_to, f.get('location',''),
+        _status, f.get('condition','Good'),
         f.get('os_version',''), f.get('storage',''),
         f.get('purchase_date') or None, f.get('purchase_price') or None,
         f.get('warranty_expiry') or None, f.get('funding_source',''),
@@ -793,6 +957,9 @@ def _save_device(id):
              domain_joined,bitlocker_enabled,mdm_enrolled,last_reimaged,
              charger_type,charger_included,case_loan,notes,updated_at)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", vals)
+        new_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        asset_tag = f.get('asset_tag', '').strip() or f.get('serial_number', '').strip() or str(new_id)
+        log_audit('device', new_id, 'create', f"Created {asset_tag}")
     else:
         db.execute("""UPDATE devices SET
             asset_tag=?,serial_number=?,device_type=?,make=?,model=?,
@@ -801,6 +968,7 @@ def _save_device(id):
             supplier=?,po_number=?,invoice_number=?,trolley=?,hostname=?,domain_joined=?,bitlocker_enabled=?,
             mdm_enrolled=?,last_reimaged=?,charger_type=?,charger_included=?,
             case_loan=?,notes=?,updated_at=? WHERE id=?""", vals + (id,))
+        log_audit('device', id, 'edit', "Edited device")
     db.commit()
 
 
@@ -936,11 +1104,12 @@ def checkout_new():
     f = request.form
     db = g.db
     db.execute("""INSERT INTO checkout (device_id,borrower_name,borrower_class,
-        checked_out_at,expected_return,notes,status)
-        VALUES (?,?,?,?,?,?,'out')""", (
+        checked_out_at,expected_return,due_date,notes,status)
+        VALUES (?,?,?,?,?,?,?,'out')""", (
         f.get('device_id') or None, f.get('borrower_name','').strip(),
         f.get('borrower_class','').strip(), f.get('checked_out_at') or today(),
-        f.get('expected_return') or None, f.get('notes','').strip()
+        f.get('expected_return') or None, f.get('due_date') or None,
+        f.get('notes','').strip()
     ))
     if f.get('device_id'):
         db.execute("UPDATE devices SET status='assigned', assigned_to=?, updated_at=? WHERE id=?",
@@ -2058,8 +2227,61 @@ def _backup_worker():
         time.sleep(3600)
 
 
+# ─── Settings ─────────────────────────────────────────────────────────────────
+
+@app.route('/settings', methods=['GET'])
+@login_required
+def settings_page():
+    if current_user.role != 'admin':
+        abort(403)
+    categories = {
+        'device_types':         ('Device Types',          get_setting('device_types', DEVICE_TYPES)),
+        'locations':            ('Locations',             get_setting('locations', LOCATIONS)),
+        'trolleys':             ('Trolleys',              get_setting('trolleys', TROLLEYS)),
+        'makes':                ('Makes / Brands',        get_setting('makes', MAKES)),
+        'funding':              ('Funding Sources',       get_setting('funding', FUNDING)),
+        'furniture_categories': ('Furniture Categories',  get_setting('furniture_categories', FURNITURE_CATEGORIES)),
+        'maintenance_types':    ('Maintenance Types',     get_setting('maintenance_types', MAINTENANCE_TYPES)),
+        'licence_types':        ('Licence Types',         get_setting('licence_types', LICENCE_TYPES)),
+        'invoice_categories':   ('Invoice Categories',    get_setting('invoice_categories', INVOICE_CATEGORIES)),
+        'accessory_types':      ('Accessory Types',       get_setting('accessory_types', ACCESSORY_TYPES)),
+        'vendors':              ('Vendors',               get_setting('vendors', VENDORS_LIST)),
+        'conditions':           ('Conditions',            get_setting('conditions', CONDITIONS)),
+        'os_versions':          ('OS Versions',           get_setting('os_versions', OS_VERSIONS)),
+        'invoice_locations':    ('Invoice Locations',     get_setting('invoice_locations', INVOICE_LOCATIONS)),
+    }
+    return render_template('settings.html', categories=categories)
+
+
+@app.route('/settings/add', methods=['POST'])
+@login_required
+def settings_add():
+    if current_user.role != 'admin':
+        abort(403)
+    key   = request.form.get('key', '').strip()
+    value = request.form.get('value', '').strip()
+    if key and value:
+        add_setting(key, value)
+        flash(f'Added "{value}" to {key.replace("_", " ").title()}.', 'success')
+    return redirect(url_for('settings_page'))
+
+
+@app.route('/settings/remove', methods=['POST'])
+@login_required
+def settings_remove():
+    if current_user.role != 'admin':
+        abort(403)
+    key   = request.form.get('key', '').strip()
+    value = request.form.get('value', '').strip()
+    if key and value:
+        remove_setting(key, value)
+        flash(f'Removed "{value}" from {key.replace("_", " ").title()}.', 'success')
+    return redirect(url_for('settings_page'))
+
+
 if __name__ == '__main__':
     init_db()
+    seed_settings()
     # Seed default admin user if none exist
     db = get_db()
     if not db.execute('SELECT id FROM users LIMIT 1').fetchone():

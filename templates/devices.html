@@ -56,9 +56,12 @@
     </a>
   </form>
 
-  <table class="table">
+  <table class="table" id="devices-table">
     <thead>
       <tr>
+        <th style="width:36px;">
+          <input type="checkbox" id="select-all" title="Select all" style="cursor:pointer;">
+        </th>
         <th>Asset Tag / Serial</th>
         <th>Type</th>
         <th>Make / Model</th>
@@ -72,10 +75,13 @@
     </thead>
     <tbody>
       {% if not devices %}
-      <tr><td colspan="9" class="empty-cell">No devices found — <a href="{{ url_for('devices') }}">clear filters</a></td></tr>
+      <tr><td colspan="10" class="empty-cell">No devices found — <a href="{{ url_for('devices') }}">clear filters</a></td></tr>
       {% endif %}
       {% for d in devices %}
       <tr>
+        <td>
+          <input type="checkbox" class="device-checkbox" value="{{ d['id'] }}" style="cursor:pointer;">
+        </td>
         <td>
           <a href="{{ url_for('device_detail', id=d['id']) }}" class="device-link">
             <strong>{{ d['asset_tag'] or d['serial_number'] or '—' }}</strong>
@@ -122,6 +128,9 @@
           <a href="{{ url_for('device_edit', id=d['id']) }}" class="btn-icon" title="Edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </a>
+          <a href="{{ url_for('device_qr', id=d['id']) }}" class="btn-icon" title="Print Label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </a>
           <form method="post" action="{{ url_for('device_delete', id=d['id']) }}" style="display:inline" onsubmit="return confirm('Delete this device?')">
             <button type="submit" class="btn-icon btn-icon-danger" title="Delete">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
@@ -133,4 +142,94 @@
     </tbody>
   </table>
 </div>
+
+<!-- Bulk action bar -->
+<div id="bulk-bar" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#1e293b; color:#fff; padding:0.85rem 1.5rem; z-index:1000; display:none; align-items:center; gap:1rem; flex-wrap:wrap; box-shadow:0 -2px 12px rgba(0,0,0,0.2);">
+  <span id="bulk-count" style="font-weight:600; white-space:nowrap;">0 selected</span>
+
+  <form id="bulk-form" method="post" action="{{ url_for('device_bulk_edit') }}" style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; flex:1;">
+    <div id="bulk-hidden-ids"></div>
+    <select name="status" style="padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #475569; background:#334155; color:#fff; font-size:0.85rem;">
+      <option value="">— Status —</option>
+      {% for s in STATUSES %}<option value="{{ s }}">{{ s|title }}</option>{% endfor %}
+    </select>
+    <select name="location" style="padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #475569; background:#334155; color:#fff; font-size:0.85rem;">
+      <option value="">— Location —</option>
+      {% for l in LOCATIONS %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+    </select>
+    <select name="trolley" style="padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #475569; background:#334155; color:#fff; font-size:0.85rem;">
+      <option value="">— Trolley —</option>
+      {% for t in TROLLEYS %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+    </select>
+    <select name="condition" style="padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #475569; background:#334155; color:#fff; font-size:0.85rem;">
+      <option value="">— Condition —</option>
+      {% for c in CONDITIONS %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Apply</button>
+  </form>
+
+  <a id="bulk-labels-btn" href="#" class="btn btn-outline" style="border-color:#94a3b8; color:#e2e8f0; white-space:nowrap;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Print Labels
+  </a>
+
+  <button onclick="clearSelection()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.25rem; line-height:1;" title="Clear selection">&#x2715;</button>
+</div>
+
+<script>
+(function () {
+  const selectAll = document.getElementById('select-all');
+  const bulkBar  = document.getElementById('bulk-bar');
+  const bulkCount = document.getElementById('bulk-count');
+  const hiddenIds = document.getElementById('bulk-hidden-ids');
+  const labelsBtn = document.getElementById('bulk-labels-btn');
+
+  function getChecked() {
+    return Array.from(document.querySelectorAll('.device-checkbox:checked'));
+  }
+
+  function updateBar() {
+    const checked = getChecked();
+    if (checked.length > 0) {
+      bulkBar.style.display = 'flex';
+      bulkCount.textContent = checked.length + ' selected';
+
+      hiddenIds.innerHTML = '';
+      checked.forEach(cb => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'ids'; inp.value = cb.value;
+        hiddenIds.appendChild(inp);
+      });
+
+      const ids = checked.map(cb => 'ids=' + encodeURIComponent(cb.value)).join('&');
+      labelsBtn.href = '{{ url_for("device_labels") }}?' + ids;
+    } else {
+      bulkBar.style.display = 'none';
+    }
+  }
+
+  document.querySelectorAll('.device-checkbox').forEach(cb => {
+    cb.addEventListener('change', function () {
+      const all = document.querySelectorAll('.device-checkbox');
+      selectAll.indeterminate = false;
+      if (getChecked().length === all.length) selectAll.checked = true;
+      else if (getChecked().length === 0) selectAll.checked = false;
+      else selectAll.indeterminate = true;
+      updateBar();
+    });
+  });
+
+  selectAll.addEventListener('change', function () {
+    document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = selectAll.checked);
+    updateBar();
+  });
+
+  window.clearSelection = function () {
+    document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = false);
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+    bulkBar.style.display = 'none';
+  };
+})();
+</script>
 {% endblock %}
