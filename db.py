@@ -239,6 +239,17 @@ def _migrate(conn):
         except Exception:
             pass
 
+    # Fix devices that have an assigned_to name but status is still 'available'
+    try:
+        conn.execute("""
+            UPDATE devices SET status='assigned'
+            WHERE assigned_to IS NOT NULL AND assigned_to != ''
+            AND status = 'available'
+        """)
+        conn.commit()
+    except Exception:
+        pass
+
     # Clean up literal "None" strings written by early Python str() coercion
     none_cols = ['asset_tag', 'serial_number', 'hostname', 'assigned_to',
                  'supplier', 'po_number', 'invoice_number', 'model',
