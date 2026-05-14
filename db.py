@@ -220,6 +220,19 @@ def init_db():
     if tgt_row['c'] == 0:
         _seed_budget_targets(conn)
 
+    school_defaults = [
+        ('school_name',       'Moil Primary School'),
+        ('school_short_name', 'Moil Primary'),
+        ('school_tagline',    'We Care'),
+        ('school_location',   'Darwin NT · Australia'),
+        ('school_logo',       ''),
+    ]
+    for key, value in school_defaults:
+        existing = conn.execute("SELECT 1 FROM settings WHERE key=?", (key,)).fetchone()
+        if not existing:
+            conn.execute("INSERT INTO settings (key,value) VALUES (?,?)", (key, value))
+    conn.commit()
+
     conn.close()
 
 
@@ -498,6 +511,19 @@ def _seed(conn):
     ])
 
     conn.execute("INSERT INTO settings (key, value) VALUES ('seeded', 'true')")
+
+    school_defaults = [
+        ('school_name',       'Moil Primary School'),
+        ('school_short_name', 'Moil Primary'),
+        ('school_tagline',    'We Care'),
+        ('school_location',   'Darwin NT · Australia'),
+        ('school_logo',       ''),
+    ]
+    for key, value in school_defaults:
+        existing = conn.execute("SELECT 1 FROM settings WHERE key=?", (key,)).fetchone()
+        if not existing:
+            conn.execute("INSERT INTO settings (key,value) VALUES (?,?)", (key, value))
+
     conn.commit()
     print(f"Seeded {len(devices)} devices from Excel data.")
 

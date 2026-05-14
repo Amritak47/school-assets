@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In — Moil Primary School</title>
+  <title>Sign In — {{ school.school_name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -426,12 +426,12 @@
 
       <div class="brand-logo-block">
         <div class="brand-logo-ring">
-          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil Primary School logo"
+          <img src="{{ url_for('static', filename=school.school_logo) }}" alt="{{ school.school_name }} logo"
                onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=null;">
         </div>
         <div class="brand-name-stack">
-          <div class="brand-name-main">Moil Primary School</div>
-          <div class="brand-name-sub">Darwin, Northern Territory</div>
+          <div class="brand-name-main">{{ school.school_name }}</div>
+          <div class="brand-name-sub">{{ school.school_location }}</div>
         </div>
       </div>
 
@@ -474,7 +474,7 @@
     </div>
 
     <div class="brand-footer">
-      &copy; {{ 2026 }} Moil Primary School &nbsp;·&nbsp; We Care
+      &copy; {{ now.year }} {{ school.school_name }} &nbsp;·&nbsp; {{ school.school_tagline }}
     </div>
   </div>
 
@@ -485,11 +485,11 @@
       <!-- Logo shown only on mobile (brand panel hidden) -->
       <div class="card-logo-top">
         <div class="card-logo-img">
-          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil Primary School logo"
+          <img src="{{ url_for('static', filename=school.school_logo) }}" alt="{{ school.school_name }} logo"
                onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=null;">
         </div>
-        <div class="card-logo-name">Moil Primary School</div>
-        <div class="card-logo-sub">Darwin, Northern Territory</div>
+        <div class="card-logo-name">{{ school.school_name }}</div>
+        <div class="card-logo-sub">{{ school.school_location }}</div>
       </div>
 
       <div class="form-heading">
@@ -536,7 +536,7 @@
       </form>
 
       <div class="form-note">
-        <strong>Moil Primary School</strong> · IT Asset Tracker · We Care
+        <strong>{{ school.school_name }}</strong> · IT Asset Tracker · {{ school.school_tagline }}
       </div>
 
     </div>

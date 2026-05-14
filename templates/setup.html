@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Setup — IT Asset Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #E8F5E9 0%, #F1F8F1 50%, #E8F5E9 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .setup-wrap {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .setup-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #2D6A2D, #4CAF50);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(45,106,45,0.28);
+    }
+
+    .setup-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: #fff;
+    }
+
+    .setup-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1B5E20;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .setup-header p {
+      font-size: 15px;
+      color: #4B5563;
+      line-height: 1.5;
+    }
+
+    .setup-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.04),
+        0 4px 6px -1px rgba(0,0,0,0.04),
+        0 20px 48px -8px rgba(0,0,0,0.10);
+      padding: 40px 44px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #9CA3AF;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 7px;
+    }
+
+    .field label .req {
+      color: #DC2626;
+      margin-left: 2px;
+    }
+
+    .field label .hint {
+      font-weight: 400;
+      color: #9CA3AF;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .field input[type="text"],
+    .field input[type="file"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111827;
+      background: #FAFAFA;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+    }
+
+    .field input[type="text"]:hover { border-color: #D1D5DB; background: #fff; }
+    .field input[type="text"]:focus {
+      border-color: #2D6A2D;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(45,106,45,0.1);
+    }
+
+    .field input[type="file"] {
+      cursor: pointer;
+      padding: 8px 12px;
+    }
+
+    .field input::placeholder { color: #C4CAD4; }
+
+    .field-note {
+      font-size: 12px;
+      color: #9CA3AF;
+      margin-top: 5px;
+    }
+
+    .logo-preview-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .logo-preview-box {
+      width: 56px;
+      height: 56px;
+      border: 1.5px dashed #D1D5DB;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F9FAFB;
+      overflow: hidden;
+    }
+
+    .logo-preview-box svg {
+      width: 24px;
+      height: 24px;
+      stroke: #D1D5DB;
+    }
+
+    .logo-preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #2D6A2D, #1B5E20);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      margin-top: 8px;
+      box-shadow: 0 4px 14px rgba(27,94,32,0.30);
+      transition: transform .18s, box-shadow .18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(27,94,32,0.35);
+    }
+
+    .submit-btn:active { transform: translateY(0); }
+
+    .submit-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: rgba(255,255,255,0.8);
+    }
+
+    .skip-note {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #9CA3AF;
+    }
+
+    .skip-note a {
+      color: #6B7280;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .setup-card { padding: 28px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="setup-wrap">
+
+  <div class="setup-header">
+    <div class="setup-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <h1>Welcome to IT Asset Tracker</h1>
+    <p>Let's set up your school profile.<br>You can update these details any time in Settings.</p>
+  </div>
+
+  <div class="setup-card">
+
+    <div class="section-label">School Profile</div>
+
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="field">
+        <label for="school_name">
+          School Full Name <span class="req">*</span>
+          <span class="hint">e.g. Moil Primary School</span>
+        </label>
+        <input type="text" id="school_name" name="school_name"
+               placeholder="e.g. Moil Primary School" required>
+      </div>
+
+      <div class="field">
+        <label for="school_short_name">
+          Short Name <span class="req">*</span>
+          <span class="hint">shown in sidebar</span>
+        </label>
+        <input type="text" id="school_short_name" name="school_short_name"
+               placeholder="e.g. Moil Primary" required>
+      </div>
+
+      <div class="field">
+        <label for="school_tagline">
+          Tagline
+          <span class="hint">e.g. We Care</span>
+        </label>
+        <input type="text" id="school_tagline" name="school_tagline"
+               placeholder="e.g. We Care">
+      </div>
+
+      <div class="field">
+        <label for="school_location">
+          Location
+          <span class="hint">e.g. Darwin NT · Australia</span>
+        </label>
+        <input type="text" id="school_location" name="school_location"
+               placeholder="e.g. Darwin NT · Australia">
+      </div>
+
+      <div class="field">
+        <label for="logo">School Logo</label>
+        <div class="logo-preview-wrap">
+          <div class="logo-preview-box" id="logo-preview-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <img id="logo-preview-img" src="" alt="Logo preview">
+          </div>
+          <input type="file" id="logo" name="logo" accept=".png,.jpg,.jpeg,.svg">
+        </div>
+        <div class="field-note">Accepts .png, .jpg, .svg — shown in the sidebar and login page.</div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Get Started
+      </button>
+    </form>
+
+  </div>
+
+  <div class="skip-note">
+    Already configured? <a href="{{ url_for('login') }}">Go to login</a>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('logo').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById('logo-preview-img');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      document.querySelector('#logo-preview-box svg').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const nameField = document.getElementById('school_name');
+  const shortField = document.getElementById('school_short_name');
+  nameField.addEventListener('input', function() {
+    if (!shortField.value) {
+      const words = this.value.trim().split(/\s+/);
+      shortField.placeholder = words.slice(0, 2).join(' ') || 'e.g. Moil Primary';
+    }
+  });
+</script>
+</body>
+</html>

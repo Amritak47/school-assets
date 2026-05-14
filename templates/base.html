@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}IT Assets{% endblock %} — Moil Primary School</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+  <title>{% block title %}IT Assets{% endblock %} — {{ school.school_name }}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename=school.school_logo) }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -20,7 +20,7 @@
 
     <div class="sidebar-brand">
       <div class="sidebar-logo-wrap">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil Primary School logo"
+        <img src="{{ url_for('static', filename=school.school_logo) }}" alt="{{ school.school_name }} logo"
              class="sidebar-logo-img"
              onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=function(){this.style.display='none'; document.getElementById('sb-logo-fb').style.display='flex';}">
         <!-- SVG fallback -->
@@ -33,7 +33,7 @@
         </div>
       </div>
       <div class="sidebar-brand-text">
-        <div class="brand-name">Moil Primary</div>
+        <div class="brand-name">{{ school.school_short_name }}</div>
         <div class="brand-sub">IT Asset Tracker</div>
       </div>
       <button class="sidebar-close" id="sidebar-close" aria-label="Close navigation">
@@ -112,9 +112,9 @@
     <div class="sidebar-footer">
       <div class="sidebar-footer-motto">
         <span class="motto-dot"></span>
-        We Care
+        {{ school.school_tagline }}
       </div>
-      <div class="sidebar-footer-loc">Darwin NT · Australia</div>
+      <div class="sidebar-footer-loc">{{ school.school_location }}</div>
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('logout') }}" class="sidebar-logout">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -138,9 +138,9 @@
 
       <!-- Mobile-only school brand (centered in topbar) -->
       <div class="topbar-mobile-brand">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil logo"
+        <img src="{{ url_for('static', filename=school.school_logo) }}" alt="{{ school.school_short_name }} logo"
              onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=null;">
-        <span>Moil Primary</span>
+        <span>{{ school.school_short_name }}</span>
       </div>
 
       <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
@@ -191,9 +191,9 @@
 
           <!-- Desktop school badge -->
           <div class="topbar-school-badge">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moil logo"
+            <img src="{{ url_for('static', filename=school.school_logo) }}" alt="{{ school.school_short_name }} logo"
                  onerror="this.src='{{ url_for('static', filename='images/logo.svg') }}'; this.onerror=null;">
-            <span>Moil Primary School</span>
+            <span>{{ school.school_name }}</span>
           </div>
           <div class="topbar-divider"></div>
           <div class="user-pill">

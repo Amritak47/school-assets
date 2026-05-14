@@ -361,6 +361,42 @@ def seed_settings():
     db.close()
 
 
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    db = get_db()
+    existing = db.execute("SELECT value FROM settings WHERE key='school_name'").fetchone()
+    if existing and existing['value']:
+        db.close()
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        fields = {
+            'school_name':       request.form.get('school_name', '').strip(),
+            'school_short_name': request.form.get('school_short_name', '').strip(),
+            'school_tagline':    request.form.get('school_tagline', '').strip(),
+            'school_location':   request.form.get('school_location', '').strip(),
+        }
+        for key, value in fields.items():
+            db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", (key, value))
+
+        logo = request.files.get('logo')
+        if logo and logo.filename:
+            logos_dir = os.path.join(app.static_folder, 'uploads', 'logos')
+            os.makedirs(logos_dir, exist_ok=True)
+            ext = logo.filename.rsplit('.', 1)[-1].lower()
+            filename = 'school_logo.' + ext
+            logo.save(os.path.join(logos_dir, filename))
+            db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES ('school_logo',?)", (filename,))
+
+        db.commit()
+        db.close()
+        flash('School setup complete! Welcome to your IT Asset Tracker.', 'success')
+        return redirect(url_for('dashboard'))
+
+    db.close()
+    return render_template('setup.html')
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -376,7 +412,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('dashboard'))
         flash('Invalid username or password')
-    return render_template('login.html')
+    return render_template('login.html', now=datetime.now())
 
 @app.route('/logout')
 @login_required
@@ -434,6 +470,24 @@ def inject_dropdown_options():
         OS_VERSIONS=get_setting('os_versions', OS_VERSIONS),
         INVOICE_LOCATIONS=get_setting('invoice_locations', INVOICE_LOCATIONS),
     )
+
+
+@app.context_processor
+def inject_school_config():
+    db = get_db()
+    keys = ['school_name', 'school_short_name', 'school_tagline', 'school_location', 'school_logo']
+    config = {}
+    for k in keys:
+        row = db.execute("SELECT value FROM settings WHERE key=?", (k,)).fetchone()
+        config[k] = row['value'] if row else ''
+    db.close()
+    if not config['school_name']:       config['school_name']       = 'My School'
+    if not config['school_short_name']: config['school_short_name'] = 'My School'
+    if not config['school_tagline']:    config['school_tagline']    = 'IT Asset Tracker'
+    if not config['school_location']:   config['school_location']   = ''
+    if not config['school_logo']:       config['school_logo'] = 'images/logo.png'
+    else: config['school_logo'] = 'uploads/logos/' + config['school_logo']
+    return dict(school=config)
 
 
 def today():
@@ -2276,6 +2330,30 @@ def settings_remove():
     if key and value:
         remove_setting(key, value)
         flash(f'Removed "{value}" from {key.replace("_", " ").title()}.', 'success')
+    return redirect(url_for('settings_page'))
+
+
+@app.route('/settings/school', methods=['POST'])
+@login_required
+def settings_school():
+    if current_user.role != 'admin':
+        abort(403)
+    db = get_db()
+    for key in ('school_name', 'school_short_name', 'school_tagline', 'school_location'):
+        val = request.form.get(key, '').strip()
+        if val:
+            db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", (key, val))
+    logo = request.files.get('logo')
+    if logo and logo.filename:
+        logos_dir = os.path.join(app.static_folder, 'uploads', 'logos')
+        os.makedirs(logos_dir, exist_ok=True)
+        ext = logo.filename.rsplit('.', 1)[-1].lower()
+        filename = 'school_logo.' + ext
+        logo.save(os.path.join(logos_dir, filename))
+        db.execute("INSERT OR REPLACE INTO settings (key,value) VALUES ('school_logo',?)", (filename,))
+    db.commit()
+    db.close()
+    flash('School profile updated.', 'success')
     return redirect(url_for('settings_page'))
 
 
